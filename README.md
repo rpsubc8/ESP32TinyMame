@@ -1,7 +1,11 @@
 <H1>working progress...</H1>
+<ul>
+ <li>Legendary Wings</li>
+ <li>Commando</li> 
+</ul>
 
-<br>
-<h1>VGA 256 colors</h1>
+<br><br>
+<h1>VGA 256 colors (Legendary Wings)</h1>
  <table>
   <tr>
    <th>Menu</th>
@@ -14,7 +18,7 @@
 </table>
 
 <br><br>
-<h1>TTGO VGA32 64 colors</h1>
+<h1>TTGO VGA32 64 colors (Legendary Wings)</h1>
  <table>
   <tr>
    <th>Menu</th>
@@ -28,7 +32,7 @@
 
 
 <br><br>
-<h1>TTGO VGA32 CVBS grey</h1>
+<h1>TTGO VGA32 CVBS grey (Legendary Wings)</h1>
  <table>
   <tr>
    <th>Menu</th>
@@ -40,3 +44,59 @@
   </tr>
 </table>
 
+
+<br><br>
+<h1>VGA 256 colors (Commando)</h1>
+ <table>
+  <tr>
+   <th>Menu</th>
+   <th>Highscore</th>
+   <th>Helicopter</th>
+   <th>Game</th>  
+  </tr>
+  <tr>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandomenu256.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohighscore256.gif'></td>    
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohelicopter256.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandogame256.gif'></td>    
+  </tr>
+</table>
+
+<br><br>
+<h1>TTGO VGA32 64 colors (Commando)</h1>
+ <table>
+  <tr>
+   <th>Menu</th>
+   <th>Highscore</th>
+   <th>Helicopter</th>
+   <th>Game</th>  
+  </tr>
+  <tr>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandomenuttgovga32.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohighscorettgovga32.gif'></td>    
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohelicopterttgovga32.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandogamettgovga32.gif'></td>    
+  </tr>
+</table>
+
+
+<br><br>
+<h1>TTGO VGA32 CVBS grey (Commando)</h1>
+ <table>
+  <tr>
+   <th>License</th>
+   <th>Insert</th>
+   <th>Menu</th>
+   <th>Highscore</th>
+   <th>Helicopter</th>
+   <th>Game</th>  
+  </tr>
+  <tr>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandolicensegrey.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandoinsertgrey.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandomenugrey.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohighscoregrey.gif'></td>    
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohelicoptergrey.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandogamegrey.gif'></td>    
+  </tr>
+</table>
