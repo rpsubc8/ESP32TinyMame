@@ -45,6 +45,19 @@
   </tr>
 </table>
 
+<br><br>
+<h1>RP2040 DVI RGB565 (Legendary Wings)</h1>
+ <table>
+  <tr>
+   <th>Menu</th>
+   <th>Game</th>
+  </tr>
+  <tr>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/lwingsmenudvi.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/lwingsgamedvi.gif'></td>    
+  </tr>
+</table>
+
 
 <br><br>
 <h1>VGA 256 colors (Commando)</h1>
@@ -99,5 +112,23 @@
    <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohighscoregrey.gif'></td>    
    <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohelicoptergrey.gif'></td>
    <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandogamegrey.gif'></td>    
+  </tr>
+</table>
+
+
+<br><br>
+<h1>RP2040 DVI RGB565 (Commando)</h1>
+ <table>
+  <tr>
+   <th>Menu</th>
+   <th>Highscore</th>
+   <th>Helicopter</th>
+   <th>Game</th>  
+  </tr>
+  <tr>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandomenudvi.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohighscoredvi.gif'></td>    
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandohelicopterdvi.gif'></td>
+   <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/commandogamedvi.gif'></td>    
   </tr>
 </table>
