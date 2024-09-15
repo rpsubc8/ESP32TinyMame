@@ -1,6 +1,7 @@
 <H1>working progress...</H1>
 <ul>
- <li>Legendary Wings</li>
+ <li>Legendary Wings <b>(Precompile version: )</b> <a href='https://github.com/rpsubc8/ESP32TinyMame/tree/main/esp32/precompile'>https://github.com/rpsubc8/ESP32TinyMame/tree/main/esp32/precompile</a></li>
+</li>
  <li>Commando</li> 
 </ul>
 <center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/devcpp.gif'></center>
