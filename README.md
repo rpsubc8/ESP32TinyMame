@@ -7,14 +7,14 @@
 <br><br>
 <h1>Keyboard PS/2</h1>
 
-| Actions     | Keys                  |
-| ----------- | --------------------- |
-| Move        | Left, Right, Up, Dow  | 
-| Fire        | Ctrl, Alt             |
-| Coins       | 12,3,4                |
-| Skip FPS    | F8                    |
-| Reset Emu   | F3                    |
-| Sound       | F9                    |
+| Actions     | Keys                   |
+| ----------- | ---------------------- |
+| Move        | Left, Right, Up, Down  | 
+| Fire        | Ctrl, Alt              |
+| Coins       | 12,3,4                 |
+| Skip FPS    | F8                     |
+| Reset Emu   | F3                     |
+| Sound       | F9 (not available)     |
 
 
 
