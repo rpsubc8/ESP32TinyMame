@@ -1,9 +1,24 @@
 <H1>working progress...</H1>
 <ul>
  <li>Legendary Wings <b>(Precompile version: )</b> <a href='https://github.com/rpsubc8/ESP32TinyMame/tree/main/esp32/precompile'>https://github.com/rpsubc8/ESP32TinyMame/tree/main/esp32/precompile</a></li>
-</li>
- <li>Commando</li> 
+ <li>Commando</li>
 </ul>
+
+<br><br>
+<h1>Keyboard PS/2</h1>
+
+| Actions     | Keys                  |
+| ----------- | --------------------- |
+| Move        | Left, Right, Up, Dow  | 
+| Fire        | Ctrl, Alt             |
+| Coins       | 12,3,4                |
+| Skip FPS    | F8                    |
+| Reset Emu   | F3                    |
+| Sound       | F9                    |
+
+
+
+<br><br>
 <center><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/devcpp.gif'></center>
 
 <br><br>
