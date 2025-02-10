@@ -5,6 +5,12 @@
 </ul>
 
 <br><br>
+<h1>Reverse engineer</h1>
+<ul>
+ <li><a href='reverseSound.md'>Legendary Wings (Sound)</a></li>
+</ul>
+
+<br><br>
 <h1>Keyboard PS/2</h1>
 
 | Actions     | Keys                   |
