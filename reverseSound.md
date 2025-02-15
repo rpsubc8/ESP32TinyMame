@@ -23,13 +23,45 @@ Es decir, se necesitan 2 CPU's Z80, una para el juego, y la otra para el sonido:
 El YM2203 es un chip OPN, que en la parte PSG es similar a un AY-3-8912 con 3 canales, mientras que en la parte OPN dispone de 3 canales FM con osciladores.<br>
 Los efectos, como disparos, bombas y explosiones, van a la parte PSG, es decir, a los 3 canales de una emulación básica AY-3-8912<br>
 Los efectos del jugador 1 van a uno de los 2 AY-3-8912, mientras que el jugador 2, al otro. Cuando ocurren explosiones, se usan ambos.<br>
-Disponemos por tanto de (3+3)+(3+3)= 12 canales. El canal de ruido si se sigue la emulación extricta de un AY-3-8912, saldrá por 1 de los 3 canales, pero si disponemos de CPU host suficiente y queremos darle más calidad lo podemos añadir a la mezcla, de manera que nos daría 14 canales.
+Disponemos por tanto de (3+3)+(3+3)= 12 canales. El canal de ruido si se sigue la emulación extricta de un AY-3-8912, saldrá por 1 de los 3 canales, pero si disponemos de CPU host suficiente y queremos darle más calidad lo podemos añadir a la mezcla, de manera que nos daría 14 canales.<br>
+El YM2203 MAME lo gestiona como un AY-3-8912, siempre que la escritura a los registros sea inferior a 16, por medio de la función <b>AYWriteReg</b> en el <b>psg.cpp</b>. En cuanto sea un registro superior, se gestionaria la parte FM (osd_ym2203_write).
+<br>
+La parte PSG de AY-3-8912, consta de:<br><br>
 
+ | Registro | Funcion                        | Rango        |
+ |----------|--------------------------------|--------------|
+ | 0        | Channel A fine tone period     | 8-bit(0-255) |
+ | 1        | Channel A coarse tone period   | 4-bit(0-15)  |
+ | 2        | Channel B fine tone period     | 8-bit(0-255) |
+ | 3        | Channel B coarse tone period   | 4-bit(0-15)  |
+ | 4        | Channel C fine tone period     | 8-bit(0-255) |
+ | 5        | Channel C coarse tone period   | 4-bit(0-15)  |
+ | 6        | Noise period                   | 5-bit(0-31)  |
+ | 7        | Mixer                          | 8-bit        |
+ | 8        | Channel A volume               | 4-bit(0-15)  |
+ | 9        | Channel B volume               | 4-bit(0-15)  |
+ | 10       | Channel C volume               | 4-bit(0-15)  |
+ | 11       | Envelope fine period           | 8-bit(0-255) |
+ | 12       | Envelope coarse period         | 8-bit(0-255) |
+ | 13       | Envelope shape                 | 4-bit(0-15)  |
+
+He realizado una medición por estadísticas, y por lo que he mirado, en el juego no se hace uso de la envolvente, así que podemos saltarnos su recreación.
 
 <br><br>
 <h1>Emulación</h1>
-No solo nos podemos saltar la emulación PSG AY-3-8912, sino también la parte FM YM2203, e incluso la emulación de la segunda CPU Z80, ya que tenemos acceso a los comandos de sonido que envia la CPU Z80 principal a la de sonido, por medio de la posición de memoria 0xF80C del contexto de la primera CPU.<br>
-Todo ello, se puede gestionar desde código MAME en genericsndhrdw.cpp:<br>
+No solo nos podemos saltar la emulación PSG AY-3-8912, sino también la parte FM YM2203, e incluso la emulación de la segunda CPU Z80, ya que tenemos acceso a los comandos de sonido que envia la CPU Z80 principal a la de sonido, por medio de la posición de memoria <b>0xF80C</b> del contexto de la primera CPU, que puede verse en el driver <b>lwingsdriver.cpp</b>.<br><br>
+
+<pre>
+ static struct MemoryWriteAddress writemem[] = {
+ {
+   { 0xc000, 0xdeff, MWA_RAM },
+   ...
+   { 0xf80c, 0xf80c, sound_command_w },
+   ...
+ }
+</pre><br>
+
+Todo ello, se puede gestionar y realizar traza, desde código MAME en <b>genericsndhrdw.cpp</b>, en donde se encuentra la llamada a la función <b>sound_command_w</b>:<br>
 
 >	 void sound_command_w (int offset,int data) <br>
 >	 { <br>
