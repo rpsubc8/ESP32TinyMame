@@ -200,7 +200,7 @@ Nosotros sabemos la frecuencia, pero debemos aplicar valores aleatorios para la 
 <h1>Sonido ESP32</h1>
 En el ESP32 haremos uso del DAC (GPIO 25), solucionando los problemas del I2S.<br>
 La salida del DAC es siempre positiva (0 a 255) y aunque con 32000 Hz para el mezclador, tenemos de sobra, trataremos con 44100 Hz.<br>
-El sistema es similar al uso de osciladores de SDL, es decir, se genera en tiempo real (0 lag), cambiando sólo frecuencias, pero además, no hacemos uso de ningún buffer:<br>
+El sistema es similar al uso de osciladores de SDL, es decir, se genera en tiempo real (0 lag), cambiando sólo frecuencias, pero además, no hacemos uso de ningún buffer:<br><br>
 
 <pre>
   hw_timer_t *gb_timerSound = NULL;
@@ -354,25 +354,31 @@ Todo ello, se puede gestionar y realizar traza, desde código MAME en <b>generic
 >	 { <br>
 
 Se envian siempre 2 comandos, que equivale al identificador del VGM (SAMPLE), seguido de otro comando con el valor 0xFF.<br>
-Algunos de los comandos para los efectos SFX, serían:
-<ul>
- <li>0x01 - SFX: Morir por explosion de enemigo</li>
- <li>0x04 - SFX: Disparo fuego</li>     
- <li>0x07 - SFX: Bomba</li>
- <li>0x0A - SFX: Explosion fuego enemigo</li> 
-</ul>
+Algunos de los comandos para los efectos SFX, serían:<br>
+
+| CMD  | Tipo | Descripción                    |
+|------|------|--------------------------------|
+| 0x01 | SFX  | Morir por explosion de enemigo |
+| 0x04 | SFX  | Disparo fuego                  |
+| 0x07 | SFX  | Bomba                          |
+| 0x0A | SFX  | Explosion fuego enemigo        |
+
+<br>
+
 Los efectos SFX, al final, aunque podriamos tenerlos sampleados, se traducen en llamadas a escrituras de puerto en los PSG AY-3-8912.<br>
 
-Para las melodias, que podemos tener en SAMPLES WAV o crudos, serían:
-<ul>
- <li>0x23 - Melodia 23.Screen Change</li>
- <li>0x25 - Melodia 01.Credit</li>
- <li>0x26 - Melodia 22.Game Over</li>
- <li>0x31 - Melodia 10.Underground</li>
- <li>0x36 - Melodia 21.Continue</li>
-</ul>
+Para las melodias, que podemos tener en SAMPLES WAV o crudos, serían:<br>
 
-Para convertir un VGM en un SAMPLE, existen varios caminos, pero el más cómodo, usar el <b>vgmplay</b>:<br>
+| CMD  | Tipo | Descripción              |
+|------|------|--------------------------|
+| 0x23 | VGM  | Melodia 23.Screen Change |
+| 0x25 | VGM  | Melodia 01.Credit        |
+| 0x26 | VGM  | Melodia 22.Game Over     |
+| 0x31 | VGM  | Melodia 10.Underground   |
+| 0x36 | VGM  | Melodia 21.Continue      |
+
+<br>
+Para convertir un VGM en un SAMPLE, existen varios caminos, pero el más cómodo, usar el <b>vgmplay</b>:<br><br>
 
 > vgmplay -c General.LogSound=1 -w 01 Credit.vgz <br>
 
