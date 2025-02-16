@@ -122,9 +122,9 @@ Si por ejemplo queremos:<br><br>
 >  44 / 2 = 22 muestras positivo y 22 negativo. <br>
 <br>
 El cambio de positivo y negativo se encarga internamente el <b>gb_flipflop_ch</b>. Así que nosotros sólo tenemos que controlar el bucle con el número de canales, que en este caso son 6, tanto del cambio de flipflop, como de la mezcla.<br>
-El <b>gbVolMixer_now</b> controla el mexclador de cada canal, de forma que si está a 0, ese canal está en silencio, es decir, no se mezcla, ni se procesa.<br>
+El <b>gbVolMixer_now</b> controla el mezclador de cada canal, de forma que si está a 0, ese canal está en silencio, es decir, no se mezcla, ni se procesa.<br>
 El <b>gbVol_canal_now</b> controla el volumen de cada canal, de forma que es algo parecido al gbVolMixer_now.<br><br>
-En esta función de relleno de buffer no se calcula cuantas muestras son positivas ni negativas dada una fecuencia, dado que ya se le pasa ese cálculo. Para saberlo, se tiene que calcular previamente, en el <b>_AYUpdateChip</b> del <b>psg.cpp</b>:<br><br>
+En esta función de relleno de buffer no se calcula cuantas muestras son positivas ni negativas dada una fecuencia, puesto que ya se le pasa ese cálculo. Para saberlo, se tiene que calcular previamente, en el <b>_AYUpdateChip</b> del <b>psg.cpp</b>:<br><br>
 <pre>
  unsigned int a= (PSG->Regs[AY_AFINE]+((unsigned int)(PSG->Regs[AY_ACOARSE]&0xF)<<8));
  //_AYUpdateChip clk:1500000000 rate:43920
@@ -143,7 +143,7 @@ Para la mezcla,es tan sencillo como hacer una simple suma, teniendo en cuenta:<b
 > flipflop 0 (parte negativa onda) - Valor mínimo. <br>
 <br>
 
-Como estamos con 16 bits con signo, el máximo es positivo, mientras que el mínimo es negativo. Dado que trabajamos con valores bajos, por mucho que sumemos, no vamos a sobrepasar el valor de 32767, por lo que no necesitamos realizar un clippping (recorte).<br><br>
+Como estamos con 16 bits con signo, el máximo es positivo, mientras que el mínimo es negativo. Dado que trabajamos con valores bajos, por mucho que sumemos, no vamos a sobrepasar el valor de -32768 o 32767, por lo que no necesitamos realizar un clippping (recorte).<br><br>
 
 Para el caso del ruido, nos viene por el registro 6 del AY-3-8912, es decir, su canal de ruido:<br>
 <pre>
