@@ -145,11 +145,11 @@ Para la mezcla en los osciladores SDL,es tan sencillo como hacer una simple suma
 > flipflop 0 (parte negativa onda) - Valor mínimo. <br>
 <br>
 
-El mezclador del AY-3-8912, es el registro <b>AY_ENABLE</b>, y controla los 3 canales (0 silencio, 1 activo):<br>
+El mezclador del AY-3-8912, es el registro <b>AY_ENABLE</b>, y controla los 3 canales (0 activo, 1 silencio) en lógica negada:<br>
 <pre>
- A - AY_ENABLE & 0x01 - gbVolMixer_now[0]
- B - AY_ENABLE & 0x02 - gbVolMixer_now[1]
- C - AY_ENABLE & 0x04 - gbVolMixer_now[2]
+ A - AY_ENABLE & 0x01 - gbVolMixer_now[0]= ((~AY_ENABLE) & 0x01)
+ B - AY_ENABLE & 0x02 - gbVolMixer_now[1]= ((~AY_ENABLE) & 0x02)
+ C - AY_ENABLE & 0x04 - gbVolMixer_now[2]= ((~AY_ENABLE) & 0x04)
 </pre>
 
 Como estamos con 16 bits con signo, el máximo es positivo, mientras que el mínimo es negativo. Dado que trabajamos con valores bajos, por mucho que sumemos, no vamos a sobrepasar el valor de -32768 o 32767, por lo que no necesitamos realizar un clippping (recorte).<br><br>
@@ -365,9 +365,49 @@ Algunos de los comandos para los efectos SFX, serían:<br>
 
 <br>
 
-Los efectos SFX, al final, aunque podriamos tenerlos sampleados, se traducen en llamadas a escrituras de puerto en los PSG AY-3-8912.<br>
+Los efectos SFX, al final, aunque podríamos tenerlos sampleados, se traducen en llamadas a escrituras de puerto en los PSG AY-3-8912.<br>
+Si depuramos  y dejamos traza, en concreto en <b>_AYUpdateChip</b> de <b>psg.cpp</b>, podemos o bien dejar todas la escrituras a registros del AY-3-8912, o mejor, sólo con los cálculos de la frecuencia (A,B,C y ruido), volumen (A,B,C) y canales de mezcla:<br>
 
-Para las melodias, que podemos tener en SAMPLES WAV o crudos, serían:<br>
+<pre>
+ soundw off:0x00 d:0x04 pend:0x00 QUEUE:0x0A (SAMPLE Fire)
+ soundw off:0x00 d:0xFF pend:0x00 QUEUE:0x0A
+  freq: 0411 0371 0853 0000  vol: 14 14 14  mix: 07 time: 12366  ms: 0
+  freq: 0344 0355 0711 0000  vol: 14 14 14  mix: 07 time: 12382  ms: 16
+  freq: 0296 0341 0609 0000  vol: 14 14 14  mix: 07 time: 12398  ms: 32
+  freq: 0260 0328 0533 0000  vol: 14 14 14  mix: 07 time: 12414  ms: 48
+  freq: 0232 0319 0481 0000  vol: 14 14 14  mix: 07 time: 12430  ms: 64
+  freq: 0242 0322 0494 0000  vol: 14 13 13  mix: 07 time: 12446  ms: 80
+  freq: 0282 0331 0559 0000  vol: 14 13 13  mix: 07 time: 12462  ms: 96
+  freq: 0338 0344 0644 0000  vol: 14 13 13  mix: 07 time: 12478  ms: 112
+  freq: 0294 0352 0578 0000  vol: 13 12 13  mix: 07 time: 12495  ms: 129
+  freq: 0279 0359 0559 0000  vol: 13 12 13  mix: 07 time: 12510  ms: 144
+  freq: 0313 0371 0644 0000  vol: 13 12 13  mix: 07 time: 12526  ms: 160
+  freq: 0264 0363 0726 0000  vol: 13 12 11  mix: 07 time: 12542  ms: 176
+  freq: 0238 0355 8538 0000  vol: 12 12 10  mix: 07 time: 12558  ms: 192
+  freq: 0191 0338 0975 0000  vol: 12 12 10  mix: 07 time: 12574  ms: 208
+  freq: 0000 0000 0000 0000  vol: 00 00 00  mix: 00 time: 12590  ms: 224
+</pre>
+<br>
+Lo he simplificado sólo para mostrar 1 chip del AY-3-8912, dado que en este caso sólo hay un jugador disparando. Se puede ver como llega el comando 0x04, seguido de un 0xFF, es decir, el sonido del disparo (SAMPLE Fire).<br>
+El time es el medidor de milisegundos actual, mientras que ms, son los milisegundos desde que comienza el sonido, de manera, que se puede ver, que más o menos cada cambio es entre 16 o 17 milisegundos, con una duración total del mismo de 224 milisegundos.<br>
+El volumen de cada canal, va de 0 a 15, y el mix está en hexadecimal, en lógica normal, de manera, que si tenemos:<br><br>
+
+| MIX  | Bin | A B C |
+|------|-----|-------|
+| 0x00 | 000 | 0 0 0 |
+| 0x01 | 001 | 0 0 1 |
+| 0x02 | 010 | 0 1 0 |
+| 0x03 | 011 | 0 1 1 |
+| 0x04 | 100 | 1 0 0 |
+| 0x05 | 101 | 1 0 1 |
+| 0x06 | 110 | 1 1 0 |
+| 0x07 | 111 | 1 1 1 |
+
+<br>
+Por tanto, si vamos enviando las frecuencias, con los volumenes, el canal de mezcla, todo ello siguiendo el intervalo de milisegundos que está establecido, contra el oscilador en tiempo real, generaremos el sonido de disparo. Otra opción es sustituirlo por un SAMPLE en formato RAW del WAV.<br><br>
+
+
+Para las melodías, que podemos tener en SAMPLES WAV o crudos, serían:<br>
 
 | CMD  | Tipo | Descripción              |
 |------|------|--------------------------|
@@ -389,7 +429,7 @@ Y por último sólo queda mezclar el sample con el resto, que dependerá del res
 
 >auxMix+= (int)(gb_vgz_data[gb_idPlay][gb_cont_vgz])*250; <br>
 
-Esto sería para el caso de SDL. Si estamos con ESP32, apuntaría al buffer de FLASH.
+Esto sería para el caso de SDL. Si estamos con ESP32, apuntaría al buffer de FLASH o bien a un buffer intermedio de SRAM que mediante otro buffer se puera rellenando a intervalos.<br>
 
 
 
