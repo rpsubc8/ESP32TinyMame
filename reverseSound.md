@@ -383,40 +383,50 @@ Para convertir un VGM en un SAMPLE, existen varios caminos, pero el más cómodo
 > vgmplay -c General.LogSound=1 -w 01 Credit.vgz <br>
 
 Una vez generado el WAV, lo podemos convertir con el <b>goldwave</b> o el <b>audacity</b> a formato RAW de 8 bits con signo. Antes hay que resamplearlo para que ocupe menos, que tal y como se comentó, cada VGM, permite un rango en algunos casos especiales de 2000 Hz, pero en la mayoría, mejor de 8000 Hz para arriba.<br>
-Usar signo, es muy útil para en el caso del ESP32 poder sumar en la mezcla sin tener que convertir los signos.<br>
+Usar signo, es muy útil para en el caso del ESP32 poder sumar en la mezcla sin tener que convertir los signos.<br><br>
+
+Y por último sólo queda mezclar el sample con el resto, que dependerá del resampleo, pero sería tan sencillo como mezclarlo con el mezclador normal.<br>
+
+>auxMix+= (int)(gb_vgz_data[gb_idPlay][gb_cont_vgz])*250; <br>
+
+Esto sería para el caso de SDL. Si estamos con ESP32, apuntaría al buffer de FLASH.
+
 
 
 
 
 <br><br>
 <h1>Lista</h1>
-Las melodías VGM, son una especie de MIDI, sobre todo por el resultado de audio final:
-<ul>
- <li>01. Credit 0:02</li>
- <li>02. Start Demo 0:06</li>
- <li>03. Game Start 0:08</li>
- <li>04. Area 1 1:13 + 0:59</li>
- <li>05. Area 2 1:05 + 0:59</li>
- <li>06. Area 3 1:30 + 1:27</li>
- <li>07. Area 4 2:02 + 1:44</li>
- <li>08. Area 5 2:04 + 1:47</li>
- <li>09. Bonus Area 1:12 + 1:10</li>
- <li>10. Underground 0:28 + 0:28</li>
- <li>11. Sanctuary 1:43 + 1:17</li>
- <li>12. Underground Boss 0:47 + 0:47</li> 	
- <li>13. Area Boss 0:25 + 0:09</li>
- <li>14. Sanctuary Boss 0:41 + 0:41</li>
- <li>15. Area Clear 1 0:06</li>
- <li>16. Area Clear 2 0:16</li>
- <li>17. Ranking 1 2:00</li>
- <li>18. Ranking 2 0:44 + 0:23</li> 	
- <li>19. Ranking Display 1 0:06</li>
- <li>20. Ranking Display 2 0:06</li>
- <li>21. Continue 0:12</li>
- <li>22. Game Over 0:07</li>
- <li>23. Screen Change 0:05</li>
- <li>24. Extend 0:02</li>		
-</ul>
+Las melodías VGM, son una especie de MIDI, sobre todo por el resultado de audio final:<br><br>
+
+| ID | Nombre           | Duración    |
+|----|-------------------|-------------|
+| 01 | Credit            | 0:02        |
+| 02 | Start Demo        | 0:06        |
+| 03 | Game Start        | 0:08        |
+| 04 | Area 1            | 1:13 + 0:59 |
+| 05 | Area 2            | 1:05 + 0:59 |
+| 06 | Area 3            | 1:30 + 1:27 |
+| 07 | Area 4            | 2:02 + 1:44 |
+| 08 | Area 5            | 2:04 + 1:47 |
+| 09 | Bonus Area        | 1:12 + 1:10 |
+| 10 | Underground       | 0:28 + 0:28 |
+| 11 | Sanctuary         | 1:43 + 1:17 |
+| 12 | Underground Boss  | 0:47 + 0:47 |
+| 13 | Area Boss         | 0:25 + 0:09 |
+| 14 | Sanctuary Boss    | 0:41 + 0:41 |
+| 15 | Area Clear 1      | 0:06        |
+| 16 | Area Clear 2      | 0:16        |
+| 17 | Ranking 1         | 2:00        |
+| 18 | Ranking 2         | 0:44 + 0:23 |
+| 19 | Ranking Display 1 | 0:06        |
+| 20 | Ranking Display 2 | 0:06        |
+| 21 | Continue          | 0:12        |
+| 22 | Game Over         | 0:07        |
+| 23 | Screen Change     | 0:05        |
+| 24 | Extend            | 0:02        |
+
+<br>
 En Total: 16:58 + 11:46<br>
 Se pueden extraer todas de:<br><br>
 <a href='https://vgmrips.net/packs/pack/legendary-wings-arcade'>https://vgmrips.net/packs/pack/legendary-wings-arcade</a><br><br>
