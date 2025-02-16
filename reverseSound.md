@@ -404,7 +404,7 @@ El volumen de cada canal, va de 0 a 15, y el mix está en hexadecimal, en lógic
 | 0x07 | 111 | 1 1 1 |
 
 <br>
-Por tanto, si vamos enviando las frecuencias, con los volumenes, el canal de mezcla, todo ello siguiendo el intervalo de milisegundos que está establecido, contra el oscilador en tiempo real, generaremos el sonido de disparo. Otra opción es sustituirlo por un SAMPLE en formato RAW del WAV.<br><br>
+Por tanto, si vamos enviando las frecuencias, con los volumenes, el canal de mezcla, todo ello siguiendo el intervalo de milisegundos que está establecido, contra el oscilador en tiempo real, generaremos el sonido de disparo. Otra opción es sustituirlo por un SAMPLE en formato RAW del WAV, pero enviar sólo 15 datos para generar 224 milisegundos de SAMPLE de sonido, es bastante tentador, para ahorrar memoria.<br><br>
 
 
 Para las melodías, que podemos tener en SAMPLES WAV o crudos, serían:<br>
