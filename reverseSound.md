@@ -336,6 +336,8 @@ El sistema es similar a SDL, usando un registro latch intermedio, de forma que c
 
 <br><br>
 <h1>Emulación</h1>
+En <b>msdos.cpp</b> se encuentra la variable <b>play_sound</b>, de manera que si está en valor 0, se dejará de procesar la segunda CPU Z80, y por tanto, se dejará de emular tanto el YM2203 la parte FM, como la parte PSG del AY-3-8912, es decir, se dejará de emular el sonido al 100%.<br>
+Si por el contrario, <b>play_sound</b> tiene el valor 1, se emulará el Z80 de sonido, y por tanto se recogerán las llamadas al PSG del AY-3-8912. En este caso, podemos emular el AY-3-8912 o no, dado que veremos la relación que existe entre los SFX's  y los VGM's.
 No solo nos podemos saltar la emulación PSG AY-3-8912, sino también la parte FM YM2203, e incluso la emulación de la segunda CPU Z80, ya que tenemos acceso a los comandos de sonido que envia la CPU Z80 principal a la de sonido, por medio de la posición de memoria <b>0xF80C</b> del contexto de la primera CPU, que puede verse en el driver <b>lwingsdriver.cpp</b>.<br><br>
 
 <pre>
@@ -388,7 +390,8 @@ Si depuramos  y dejamos traza, en concreto en <b>_AYUpdateChip</b> de <b>psg.cpp
   freq: 0000 0000 0000 0000  vol: 00 00 00  mix: 00 time: 12590  ms: 224
 </pre>
 <br>
-Lo he simplificado sólo para mostrar 1 chip del AY-3-8912, dado que en este caso sólo hay un jugador disparando. Se puede ver como llega el comando 0x04, seguido de un 0xFF, es decir, el sonido del disparo (SAMPLE Fire).<br>
+La ventaja de interceptar tanto los SFX's, como los VGM's, es que no necesitamos tener activo <b>play_sound</b>, y por tanto ni emular el Z80 de sonido, ni ninguno los chips de sonido.<br>
+Lo he simplificado todo, para mostrar 1 chip del AY-3-8912, dado que en este caso sólo hay un jugador disparando. Se puede ver como llega el comando 0x04, seguido de un 0xFF, es decir, el sonido del disparo (SAMPLE Fire).<br>
 El time es el medidor de milisegundos actual, mientras que ms, son los milisegundos desde que comienza el sonido, de manera, que se puede ver, que más o menos cada cambio es entre 16 o 17 milisegundos, con una duración total del mismo de 224 milisegundos.<br>
 El volumen de cada canal, va de 0 a 15, y el mix está en hexadecimal, en lógica normal, de manera, que si tenemos:<br><br>
 
