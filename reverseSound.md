@@ -28,22 +28,22 @@ El YM2203 MAME lo gestiona como un AY-3-8912, siempre que la escritura a los reg
 <br>
 La parte PSG de AY-3-8912, consta de:<br><br>
 
- | Registro | Funcion                        | Rango        |
- |----------|--------------------------------|--------------|
- | 0        | Channel A fine tone period     | 8-bit(0-255) |
- | 1        | Channel A coarse tone period   | 4-bit(0-15)  |
- | 2        | Channel B fine tone period     | 8-bit(0-255) |
- | 3        | Channel B coarse tone period   | 4-bit(0-15)  |
- | 4        | Channel C fine tone period     | 8-bit(0-255) |
- | 5        | Channel C coarse tone period   | 4-bit(0-15)  |
- | 6        | Noise period                   | 5-bit(0-31)  |
- | 7        | Mixer                          | 8-bit        |
- | 8        | Channel A volume               | 4-bit(0-15)  |
- | 9        | Channel B volume               | 4-bit(0-15)  |
- | 10       | Channel C volume               | 4-bit(0-15)  |
- | 11       | Envelope fine period           | 8-bit(0-255) |
- | 12       | Envelope coarse period         | 8-bit(0-255) |
- | 13       | Envelope shape                 | 4-bit(0-15)  |
+ | Registro | Funcion                        | Nombre      | Rango        |
+ |----------|--------------------------------|-------------|--------------|
+ | 0        | Channel A fine tone period     | AY_AFINE    | 8-bit(0-255) |
+ | 1        | Channel A coarse tone period   | AY_ACOARSE  | 4-bit(0-15)  |
+ | 2        | Channel B fine tone period     | AY_BFINE    | 8-bit(0-255) |
+ | 3        | Channel B coarse tone period   | AY_BCOARSE  | 4-bit(0-15)  |
+ | 4        | Channel C fine tone period     | AY_CFINE    | 8-bit(0-255) |
+ | 5        | Channel C coarse tone period   | AY_CCOARSE  | 4-bit(0-15)  |
+ | 6        | Noise period                   | AY_NOISEPER | 5-bit(0-31)  |
+ | 7        | Mixer                          | AY_ENABLE   | 8-bit        |
+ | 8        | Channel A volume               | AY_AVOL     | 4-bit(0-15)  |
+ | 9        | Channel B volume               | AY_BVOL     | 4-bit(0-15)  |
+ | 10       | Channel C volume               | AY_CVOL     | 4-bit(0-15)  |
+ | 11       | Envelope fine period           | AY_EFINE    | 8-bit(0-255) |
+ | 12       | Envelope coarse period         | AY_ECOARSE  | 8-bit(0-255) |
+ | 13       | Envelope shape                 |             | 4-bit(0-15)  |
 
 He realizado una medición por estadísticas, y por lo que he mirado, en el juego no se hace uso de la envolvente, así que podemos saltarnos su recreación.
 
@@ -137,15 +137,24 @@ Este ejemplo es para tener la frecuencia del canal A, en concreto de 1 de los 2 
 > gb_max_cont_neg_ch[0]= gb_max_cont_pos_ch[0]; <br>
 <br>
 
-Para la mezcla,es tan sencillo como hacer una simple suma, teniendo en cuenta:<br><br>
+Para el caso del canal B y C, es similar.
+
+Para la mezcla en los osciladores SDL,es tan sencillo como hacer una simple suma, teniendo en cuenta:<br><br>
 
 > flipflop 1 (parte positiva onda) - Valor máximo. <br>
 > flipflop 0 (parte negativa onda) - Valor mínimo. <br>
 <br>
 
+El mezclador del AY-3-8912, es el registro <b>AY_ENABLE</b>, y controla los 3 canales (0 silencio, 1 activo):<br>
+<pre>
+ A - AY_ENABLE & 0x01
+ B - AY_ENABLE & 0x02
+ C - AY_ENABLE & 0x04
+</pre>
+
 Como estamos con 16 bits con signo, el máximo es positivo, mientras que el mínimo es negativo. Dado que trabajamos con valores bajos, por mucho que sumemos, no vamos a sobrepasar el valor de -32768 o 32767, por lo que no necesitamos realizar un clippping (recorte).<br><br>
 
-Para el caso del ruido, nos viene por el registro 6 del AY-3-8912, es decir, su canal de ruido:<br>
+Para el caso del ruido, nos viene por el registro 6 del AY-3-8912, es decir, su canal de ruido (AY_NOISEPER):<br>
 <pre>
  unsigned int noise= PSG->Regs[AY_NOISEPER];
  noise= noise ? AYClockFreq / AYSoundRate * 4 / noise : 0;
@@ -189,7 +198,140 @@ Nosotros sabemos la frecuencia, pero debemos aplicar valores aleatorios para la 
 
 <br><br>
 <h1>Sonido ESP32</h1>
+En el ESP32 haremos uso del DAC (GPIO 25), solucionando los problemas del I2S.<br>
+La salida del DAC es siempre positiva (0 a 255) y aunque con 32000 Hz para el mezclador, tenemos de sobra, trataremos con 44100 Hz.<br>
+El sistema es similar al uso de osciladores de SDL, es decir, se genera en tiempo real (0 lag), cambiando sólo frecuencias, pero además, no hacemos uso de ningún buffer:<br>
 
+<pre>
+  hw_timer_t *gb_timerSound = NULL;
+  volatile unsigned char gb_spk_data= 0x80;
+  volatile unsigned char gb_spk_data_before= 0x80;
+
+  hw_timer_t *gb_timerPlayPoll = NULL;
+
+  void IRAM_ATTR onTimerSoundDAC(void); 
+  void IRAM_ATTR onTimerPlayPoll(void);
+ 
+ void setup()
+ {
+  dac_output_enable(DAC_CHANNEL_1);
+  CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL2_REG, SENS_DAC_CW_EN1_M);
+  SET_PERI_REG_BITS(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_DAC, 0x7f, RTC_IO_PDAC1_DAC_S);
+
+  gb_timerSound= timerBegin(0, 80, true); 
+  timerAttachInterrupt(gb_timerSound, &onTimerSoundDAC, true);
+
+  gb_timerPlayPoll = timerBegin(1,80,true);
+  timerAttachInterrupt(gb_timerPlayPoll, &onTimerPlayPoll, true);
+
+  //timerAlarmWrite(gb_timerSound, 125, true); //1000000 1 segundo  125 es 8000 hz
+  //timerAlarmWrite(gb_timerSound, 90, true); //1000000 1 segundo  125 es 11025 hz
+  //timerAlarmWrite(gb_timerSound, 62, true); //1000000 1 segundo  62 es 16000 hz
+  //timerAlarmWrite(gb_timerSound, 45, true); //1000000 1 segundo  45 es 22050 Hz
+  timerAlarmWrite(gb_timerSound, 22, true); //1000000 1 segundo  22 es 44100 Hz
+
+  timerAlarmWrite(gb_timerPlayPoll, 1000, true); //1000000 1 segundo  1000 es 1000 Hz 1 ms
+   
+  timerAlarmEnable(gb_timerSound);
+  timerAlarmEnable(gb_timerPlayPoll);  
+ }
+
+ 
+
+ void IRAM_ATTR onTimerPlayPoll()
+ {
+  Sonido_poll_play();
+ }
+
+ void Sonido_poll_play()
+ {
+  //Canal A
+  gbVol_canal_now[0]= gb_latch_vol_pulse[0];  
+  gb_max_cont_pos_ch[0]= gb_latch_pos_max_pulse[0];
+  gb_max_cont_neg_ch[0]= gb_latch_neg_max_pulse[0];
+
+  //Canal B
+  gbVol_canal_now[1]= gb_latch_vol_pulse[1];  
+  gb_max_cont_pos_ch[1]= gb_latch_pos_max_pulse[1];
+  gb_max_cont_neg_ch[1]= gb_latch_neg_max_pulse[1];
+
+  ...
+
+  for (unsigned char i=0;i<6;i++)
+  {
+   gbVolMixer_now[i]= gb_latch_vol_mix[i];
+  }
+ }
+ 
+ void IRAM_ATTR onTimerSoundDAC()
+ {  
+  int iSum;
+  int vol;
+  unsigned int auxMax;
+
+  if (gb_spk_data != gb_spk_data_before)
+  {
+   SET_PERI_REG_BITS(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_DAC, gb_spk_data, RTC_IO_PDAC1_DAC_S);   //dac_output
+   gb_spk_data_before= gb_spk_data;
+  }
+
+  iSum= 0;
+
+  //Canal A
+  gb_cur_cont_ch[0]++;
+  auxMax= (gb_flipflop_ch[0]==0) ? (gb_max_cont_pos_ch[0]): (gb_max_cont_neg_ch[0]);
+  if (gb_cur_cont_ch[0] >= auxMax)
+  {                          
+   gb_cur_cont_ch[0]=0;
+        
+   gb_flipflop_ch[0]++;
+   gb_flipflop_ch[0]= (gb_flipflop_ch[0] & 0x01);
+  }
+
+  //Canal B
+  gb_cur_cont_ch[1]++;
+  auxMax= (gb_flipflop_ch[1]==0) ? (gb_max_cont_pos_ch[1]): (gb_max_cont_neg_ch[1]);
+  if (gb_cur_cont_ch[1] >= auxMax)
+  {                          
+   gb_cur_cont_ch[1]=0;
+        
+   gb_flipflop_ch[1]++;
+   gb_flipflop_ch[1]= (gb_flipflop_ch[1] & 0x01);
+  }
+  
+  ...
+
+
+  //MIXER
+  //Canal A
+  if ((gbVolMixer_now[0]!=0) && (gbVol_canal_now[0]!=0))
+  {
+   vol= (int)(gbVol_canal_now[0])<<1;
+   iSum+= (gb_flipflop_ch[0]==1)? vol:-vol;
+  }
+
+  //Canal B
+  if ((gbVolMixer_now[1]!=0) && (gbVol_canal_now[1]!=0))
+  {
+   vol= (int)(gbVol_canal_now[1])<<1;
+   iSum+= (gb_flipflop_ch[1]==1)? vol:-vol;
+  }    
+  
+  ...
+
+  //Clipping
+  if (iSum>127) {iSum=127;}
+  else
+  {
+   if(iSum<-127) {iSum=-127;}
+  }
+  
+  gb_spk_data= (iSum+0x80);
+    
+ }
+</pre>
+
+El sistema es similar a SDL, usando un registro latch intermedio, de forma que concurrentemente cada milisegundo se va mirando estado de dicho latch, el cual se va actualizando cada vez que se escribe en un registro del AY-3-8912.<br>
 
 
 <br><br>
@@ -211,7 +353,7 @@ Todo ello, se puede gestionar y realizar traza, desde código MAME en <b>generic
 >	 void sound_command_w (int offset,int data) <br>
 >	 { <br>
 
-Se envian siempre 2 comandos, que equivale al identificador del SAMPLE, seguido de otro comando con el valor 0xFF.<br>
+Se envian siempre 2 comandos, que equivale al identificador del VGM (SAMPLE), seguido de otro comando con el valor 0xFF.<br>
 Algunos de los comandos para los efectos SFX, serían:
 <ul>
  <li>0x01 - SFX: Morir por explosion de enemigo</li>
@@ -230,10 +372,19 @@ Para las melodias, que podemos tener en SAMPLES WAV o crudos, serían:
  <li>0x36 - Melodia 21.Continue</li>
 </ul>
 
+Para convertir un VGM en un SAMPLE, existen varios caminos, pero el más cómodo, usar el <b>vgmplay</b>:<br>
+
+> vgmplay -c General.LogSound=1 -w 01 Credit.vgz <br>
+
+Una vez generado el WAV, lo podemos convertir con el <b>goldwave</b> o el <b>audacity</b> a formato RAW de 8 bits con signo. Antes hay que resamplearlo para que ocupe menos, que tal y como se comentó, cada VGM, permite un rango en algunos casos especiales de 2000 Hz, pero en la mayoría, mejor de 8000 Hz para arriba.<br>
+Usar signo, es muy útil para en el caso del ESP32 poder sumar en la mezcla sin tener que convertir los signos.<br>
+
+
+
 
 <br><br>
 <h1>Lista</h1>
-Las melodías VGM, son una especie de MIDI:
+Las melodías VGM, son una especie de MIDI, sobre todo por el resultado de audio final:
 <ul>
  <li>01. Credit 0:02</li>
  <li>02. Start Demo 0:06</li>
