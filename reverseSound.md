@@ -392,7 +392,7 @@ Lo he simplificado sólo para mostrar 1 chip del AY-3-8912, dado que en este cas
 El time es el medidor de milisegundos actual, mientras que ms, son los milisegundos desde que comienza el sonido, de manera, que se puede ver, que más o menos cada cambio es entre 16 o 17 milisegundos, con una duración total del mismo de 224 milisegundos.<br>
 El volumen de cada canal, va de 0 a 15, y el mix está en hexadecimal, en lógica normal, de manera, que si tenemos:<br><br>
 
-| MIX  | Bin | A B C |
+| MIX  | Bin | C B A |
 |------|-----|-------|
 | 0x00 | 000 | 0 0 0 |
 | 0x01 | 001 | 0 0 1 |
@@ -411,11 +411,11 @@ Para las melodías, que podemos tener en SAMPLES WAV o crudos, serían:<br>
 
 | CMD  | Tipo | Descripción              |
 |------|------|--------------------------|
-| 0x23 | VGM  | Melodia 23.Screen Change |
-| 0x25 | VGM  | Melodia 01.Credit        |
-| 0x26 | VGM  | Melodia 22.Game Over     |
-| 0x31 | VGM  | Melodia 10.Underground   |
-| 0x36 | VGM  | Melodia 21.Continue      |
+| 0x23 | VGM  | Melodía 23.Screen Change |
+| 0x25 | VGM  | Melodía 01.Credit        |
+| 0x26 | VGM  | Melodía 22.Game Over     |
+| 0x31 | VGM  | Melodía 10.Underground   |
+| 0x36 | VGM  | Melodía 21.Continue      |
 
 <br>
 Para convertir un VGM en un SAMPLE, existen varios caminos, pero el más cómodo, usar el <b>vgmplay</b>:<br><br>
