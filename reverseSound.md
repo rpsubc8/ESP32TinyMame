@@ -147,9 +147,9 @@ Para la mezcla en los osciladores SDL,es tan sencillo como hacer una simple suma
 
 El mezclador del AY-3-8912, es el registro <b>AY_ENABLE</b>, y controla los 3 canales (0 silencio, 1 activo):<br>
 <pre>
- A - AY_ENABLE & 0x01
- B - AY_ENABLE & 0x02
- C - AY_ENABLE & 0x04
+ A - AY_ENABLE & 0x01 - gbVolMixer_now[0]
+ B - AY_ENABLE & 0x02 - gbVolMixer_now[1]
+ C - AY_ENABLE & 0x04 - gbVolMixer_now[2]
 </pre>
 
 Como estamos con 16 bits con signo, el máximo es positivo, mientras que el mínimo es negativo. Dado que trabajamos con valores bajos, por mucho que sumemos, no vamos a sobrepasar el valor de -32768 o 32767, por lo que no necesitamos realizar un clippping (recorte).<br><br>
@@ -437,12 +437,14 @@ Muchas melodias, son secuenciales, por ejemplo, después del    22. Game Over 0:
 
 <br><br>
 <h1>Nivel</h1>
-De lo que he podido depurar, el nivel de juego se puede detectar por 3 posiciones de memoria:
-<ul>
- <li>0xC06C - Resetear (1 avanza el nivel)</li>
- <li>0xC06D - El nivel</li>
- <li>0xC06E - Finalizar (0 continuar, 1 morir)</li>
-</ul>
+De lo que he podido depurar, el nivel de juego se puede detectar por 3 posiciones de memoria:<br><br>
+
+| ADDR   | Descripción                      |
+|--------|----------------------------------|
+| 0xC06C | Resetear (1 avanza el nivel)     |
+| 0xC06D | El nivel                         |
+| 0xC06E | Finalizar (0 continuar, 1 morir) |
+<br>
 
 El nivel propiamente dicho está en 0xC06D, pero si no se envia el set a 1 de las posiciones 0xC06C y 0 de 0xC06E, no se hará ninguna acción.<br>
 Saber el nivel, es cómodo para poder saber que melodía debemos poner y para más situaciones.
