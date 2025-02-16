@@ -13,9 +13,9 @@ La máquina Capcom Section Z dispone de:
 
 Es decir, se necesitan 2 CPU's Z80, una para el juego, y la otra para el sonido:
 
->	for (activecpu = 0;activecpu < totalcpu;activecpu++)<br>
->	{<br>
->		int cycles;<br>
+>	for (activecpu = 0;activecpu < totalcpu;activecpu++) <br>
+>	{ <br>
+>		int cycles; <br>
 <br><br>
 
 
@@ -46,6 +46,151 @@ La parte PSG de AY-3-8912, consta de:<br><br>
  | 13       | Envelope shape                 | 4-bit(0-15)  |
 
 He realizado una medición por estadísticas, y por lo que he mirado, en el juego no se hace uso de la envolvente, así que podemos saltarnos su recreación.
+
+<br><br>
+<h1>Sonido x86 SDL</h1>
+En PC, la tarjeta de sonido siempre hace uso de un buffer interno DMA que no se puede modificar, dado que bloquearía el resto de hardware. Lo que si se permite es utilizar otro buffer y una llamada periódica que rellena nuestro buffer auxiliar, que posteriormente se envía al buffer interno de la tarjeta de sonido.<br>
+Este buffer dependerá de la velocidad de muestreo, así como de las veces que vaya llamándose para rellenar, de manera que puede aparecer el temido problema de fallos de sonidos, por no coincidir ni los tiempos o incluso el relleno, por quedarse corto o excederse.<br>
+Para solucionar esto, que es el problema de la mayoría de emuladores, he decidido ir a lo más práctico, es decir, el uso de osciladores, de manera, que cada vez que se invoque automáticamente <b>SDL_audio_callback</b>, no tengamos que estar preocupándonos del relleno ni del tiempo, dado que le pasamos los parámetros a generar en el buffer.<br>
+Para el caso de querer un mezclador de 6 canales, es decir, tener 2 chips AY-3-8912, nos sirve algo similar:<br><br>
+
+<pre>
+ volatile unsigned int gb_cur_cont_ch[8]={0,0,0,0,0,0,0,0};
+ volatile unsigned char gb_flipflop_ch[8]={0,0,0,0,0,0,0,0};
+ volatile unsigned int gb_max_cont_ch[8]={1,1,1,1,1,1,1,1};
+ 
+ void SDL_InitAudio()
+ { 
+  want.freq = 44100;
+  want.format = AUDIO_S16SYS;
+  want.channels = 1;
+  want.samples = 1024;
+  want.callback = SDL_audio_callback;
+  want.userdata = &sample_nr;
+  ...
+ }
+
+
+
+ void SDL_audio_callback(void *user_data, Uint8 *raw_buffer, int bytes)
+ {
+  if (bytes == 0){
+   return;      
+  }
+
+  Sint16 *buffer = (Sint16*)raw_buffer;
+  unsigned int length = (bytes>>1);
+  unsigned int &sample_nr(*(unsigned int*)user_data); 
+  double auxMix=0;
+
+  for(unsigned int i = 0; i < length; i++, sample_nr++) 
+  {
+   for (unsigned char ch=0;ch<6;ch++)
+   {        
+    gb_cur_cont_ch[ch]++;
+    unsigned int auxMax= (gb_flipflop_ch[ch]==0) ? (gb_max_cont_pos_ch[ch]-0): (gb_max_cont_neg_ch[ch]-0);
+       
+    if (gb_cur_cont_ch[ch] >= auxMax)
+    {                              
+     gb_cur_cont_ch[ch]=0;
+     
+     gb_flipflop_ch[ch]++;
+     gb_flipflop_ch[ch]= (gb_flipflop_ch[ch] & 0x01);     
+    }
+   }// fin for ch
+
+   auxMix=0;
+   for (unsigned char ch=0;ch<6;ch++)
+   {
+    if ((gbVolMixer_now[ch]!=0) && (gbVol_canal_now[ch]!=0))
+    {
+     int vol= (int)(gbVol_canal_now[ch])*250;
+     auxMix+= (gb_flipflop_ch[ch]==1)? vol:-vol;
+    }
+   }
+                            
+   buffer[i]= (Sint16)(auxMix);
+  } 
+ }
+</pre>
+
+En el <b>Legendary Wings</b>, no se hace uso del duty cycle de sonido, como podría ser el caso de la APU de la NES, es decir, que la onda de sonido AY-3-8912, además de ser cuadrada, tiene la misma duración de la parte positiva, que la negativa, lo que nos facilita los cálculos.<br>
+Si por ejemplo queremos:<br><br>
+
+> Frecuencia 1000 Hz <br>
+>  44100 Hz / 1000 Hz = 44 muestras <br>
+>  44 / 2 = 22 muestras positivo y 22 negativo. <br>
+<br>
+El cambio de positivo y negativo se encarga internamente el <b>gb_flipflop_ch</b>. Así que nosotros sólo tenemos que controlar el bucle con el número de canales, que en este caso son 6, tanto del cambio de flipflop, como de la mezcla.<br>
+El <b>gbVolMixer_now</b> controla el mexclador de cada canal, de forma que si está a 0, ese canal está en silencio, es decir, no se mezcla, ni se procesa.<br>
+El <b>gbVol_canal_now</b> controla el volumen de cada canal, de forma que es algo parecido al gbVolMixer_now.<br><br>
+En esta función de relleno de buffer no se calcula cuantas muestras son positivas ni negativas dada una fecuencia, dado que ya se le pasa ese cálculo. Para saberlo, se tiene que calcular previamente, en el <b>_AYUpdateChip</b> del <b>psg.cpp</b>:<br><br>
+<pre>
+ unsigned int a= (PSG->Regs[AY_AFINE]+((unsigned int)(PSG->Regs[AY_ACOARSE]&0xF)<<8));
+ //_AYUpdateChip clk:1500000000 rate:43920
+ a = a ? AYClockFreq / AYSoundRate * 4 / a : 0;
+ a=a>>2; //Para que suene más grave.
+</pre><br>
+Este ejemplo es para tener la frecuencia del canal A, en concreto de 1 de los 2 AY-3-8912. Pero nosotros necesitamos convertir esa frecuencia en los datos para nuestro oscilador:<br><br>
+
+> gb_max_cont_pos_ch[0]= (a!=0)? SAMPLE_RATE/a/2 : 0;  //44100/a/2 <br>
+> gb_max_cont_neg_ch[0]= gb_max_cont_pos_ch[0]; <br>
+<br>
+
+Para la mezcla,es tan sencillo como hacer una simple suma, teniendo en cuenta:<br><br>
+
+> flipflop 1 (parte positiva onda) - Valor máximo. <br>
+> flipflop 0 (parte negativa onda) - Valor mínimo. <br>
+<br>
+
+Como estamos con 16 bits con signo, el máximo es positivo, mientras que el mínimo es negativo. Dado que trabajamos con valores bajos, por mucho que sumemos, no vamos a sobrepasar el valor de 32767, por lo que no necesitamos realizar un clippping (recorte).<br><br>
+
+Para el caso del ruido, nos viene por el registro 6 del AY-3-8912, es decir, su canal de ruido:<br>
+<pre>
+ unsigned int noise= PSG->Regs[AY_NOISEPER];
+ noise= noise ? AYClockFreq / AYSoundRate * 4 / noise : 0;
+ //noise= noise ? 1500000 / (16*noise) : 0;
+ noise=noise>>5;
+</pre><br>
+Para la rutina de osciladores, aunque puede usarse la función <b>rand</b>, lo más optimizado es hacer uso de trucos.<br>
+Nosotros sabemos la frecuencia, pero debemos aplicar valores aleatorios para la parte positiva, y lo mismo para la negativa, respetando el cruce por 0, así como la frecuencia de muestreo:<br><br>
+<pre>
+ unsigned char gb_aRand[16]={5,1,9,1,4,1,2,1,16,1,7,1,13,1,6,1}; //0 a 15
+ unsigned char gb_contRand=0;
+ static unsigned int g_seed=0;
+ 
+ inline unsigned int fast_rand()
+ {
+  g_seed = ((214013 * g_seed) + 2531011);
+  return (g_seed>>16)&0x7FFF;
+ }
+
+ 
+ ...
+
+ 
+ //En la rutina de mezcla de canales
+ 
+  int vol= (int)(gbVol_canal_now[ch]) * (250/8) * ((gb_aRand[gb_contRand])+1); //De 1 a 14
+  if ((i&0x07)==0)      
+  {//44100 DIV 8000 = 5 lo dejo en cada 6 el cambio de aleatorio
+   gb_contRand++;
+   if (gb_contRand>15)
+   {
+    gb_contRand= gb_contRand + fast_rand() & 0x0F;
+    gb_contRand= (gb_contRand & 0x0F);
+   } 
+  }
+
+  auxMix+= (gb_flipflop_ch[ch]==1)? vol:-vol;
+ 
+</pre>
+
+
+<br><br>
+<h1>Sonido ESP32</h1>
+
+
 
 <br><br>
 <h1>Emulación</h1>
