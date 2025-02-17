@@ -332,6 +332,8 @@ El sistema es similar al uso de osciladores de SDL, es decir, se genera en tiemp
 </pre>
 
 El sistema es similar a SDL, usando un registro latch intermedio, de forma que concurrentemente cada milisegundo se va mirando estado de dicho latch, el cual se va actualizando cada vez que se escribe en un registro del AY-3-8912.<br>
+Si la rutina de emulación de CPU de un frame completo, es muy rápida, es decir, por debajo de 8 milisegundos, puede que no necesitamos usar un timer con el latch cada 1 milisegundo.<br>
+El uso de la rutina con timer de tiempo real para los osciladores, al usar el DAC sin I2S con DMA, consume un poco más de CPU, pero a cambio solucionamos el problema con los diferentes frameworks de Espressif (sin solución). No obstante, si en lugar de usar este sistema, usaramos una escalera de reistencias R2R con salida GPIO o bien una comunicación I2C con un chip (Atmega328) o DAC exterior, quedaría también solucionado.<br>
 
 
 <br><br>
@@ -466,13 +468,25 @@ Para las melodías, que podemos tener en SAMPLES WAV o crudos, serían:<br>
 
 | CMD  | Tipo | Descripción              |
 |------|------|--------------------------|
+| 0x20 | VGM  | Melodía 03.Game Start    |
 | 0x23 | VGM  | Melodía 23.Screen Change |
 | 0x25 | VGM  | Melodía 01.Credit        |
 | 0x26 | VGM  | Melodía 22.Game Over     |
+| 0x2B | VGM  | Melodía Area 1           |
 | 0x31 | VGM  | Melodía 10.Underground   |
 | 0x36 | VGM  | Melodía 21.Continue      |
+| 0x37 | VGM  | Melodía 02.Start Demo    |
+
 
 <br>
+Las melodías (VGM), a diferencia de los SFX, se van encolando, de manera, que hasta que no termina, no suena la siguiente. Esto es algo que se nota sobre todo al empezar partida en primer nivel desde 0, que van encolándose:<br><br>
+
+<ul>
+ <li>1.- (SAMPLE Melodía 02.Start Demo)</li>
+ <li>2.- (SAMPLE Melody 03.Game Start)</li>
+ <li>3.- (SAMPLE Melody Area 1)</li>
+</ul>
+
 Para convertir un VGM en un SAMPLE, existen varios caminos, pero el más cómodo, usar el <b>vgmplay</b>:<br><br>
 
 > vgmplay -c General.LogSound=1 -w 01 Credit.vgz <br>
