@@ -409,8 +409,12 @@ El volumen de cada canal, va de 0 a 15, y el mix está en hexadecimal, en lógic
 | 0x07 | 111 | 1 1 1 |
 
 <br><br>
-Por tanto, si vamos enviando las frecuencias, con los volumenes, el canal de mezcla, todo ello siguiendo el intervalo de milisegundos que está establecido, contra el oscilador en tiempo real, generaremos el sonido de disparo. Otra opción es sustituirlo por un SAMPLE en formato RAW del WAV, pero enviar sólo 15 datos para generar 224 milisegundos de SAMPLE de sonido, es bastante tentador, para ahorrar memoria.<br>
-<br>
+Por tanto, si vamos enviando las frecuencias, con los volumenes, el canal de mezcla, todo ello siguiendo el intervalo de milisegundos que está establecido, contra el oscilador en tiempo real, generaremos el sonido de disparo. Otra opción es sustituirlo por un SAMPLE en formato RAW del WAV, pero enviar sólo 15 datos para generar 224 milisegundos de SAMPLE de sonido, es bastante tentador, para ahorrar memoria.<br><br>
+
+
+https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/disparo.wav?raw=true
+
+<br><br>
 Otro ejemplo, es el caso del SFX de la Bomba (0x07):<br>
 
 <pre>
@@ -461,6 +465,8 @@ Se ve como llega el comando 0x07, y luego llegan 30 datos, con el canal A,B,C y 
 |      | 110xxx | 1  | 1  | 0  |
 |      | 111xxx | 1  | 1  | 1  |
 
+<br>
+https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/bomba.wav?raw=true
 <br><br>
 
 
