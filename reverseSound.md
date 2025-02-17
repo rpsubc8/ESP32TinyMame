@@ -406,8 +406,60 @@ El volumen de cada canal, va de 0 a 15, y el mix está en hexadecimal, en lógic
 | 0x06 | 110 | 1 1 0 |
 | 0x07 | 111 | 1 1 1 |
 
+<br><br>
+Por tanto, si vamos enviando las frecuencias, con los volumenes, el canal de mezcla, todo ello siguiendo el intervalo de milisegundos que está establecido, contra el oscilador en tiempo real, generaremos el sonido de disparo. Otra opción es sustituirlo por un SAMPLE en formato RAW del WAV, pero enviar sólo 15 datos para generar 224 milisegundos de SAMPLE de sonido, es bastante tentador, para ahorrar memoria.<br>
 <br>
-Por tanto, si vamos enviando las frecuencias, con los volumenes, el canal de mezcla, todo ello siguiendo el intervalo de milisegundos que está establecido, contra el oscilador en tiempo real, generaremos el sonido de disparo. Otra opción es sustituirlo por un SAMPLE en formato RAW del WAV, pero enviar sólo 15 datos para generar 224 milisegundos de SAMPLE de sonido, es bastante tentador, para ahorrar memoria.<br><br>
+Otro ejemplo, es el caso del SFX de la Bomba (0x07):<br>
+
+<pre>
+ soundw off:0x00 d:0x07 pend:0x00 QUEUE:0x0A (SAMPLE Bomb) 
+ soundw off:0x00 d:0xFF pend:0x00 QUEUE:0x0A
+  freq: 0853 0379 0196 0533 vol: 11 14 15  mix: 0F  time: 18014  ms: 0
+  freq: 0474 0279 0165 0474 vol: 11 14 15  mix: 0F  time: 18030  ms: 16
+  freq: 0328 0221 0143 0426 vol: 11 14 15  mix: 0F  time: 18046  ms: 32
+  freq: 0251 0183 0126 0388 vol: 11 14 15  mix: 0F  time: 18063  ms: 49
+  freq: 0204 0157 0113 0388 vol: 11 14 15  mix: 0F  time: 18078  ms: 64
+  freq: 0171 0137 0102 0355 vol: 11 14 15  mix: 0F  time: 18094  ms: 80
+  freq: 0147 0121 0093 0328 vol: 11 14 15  mix: 0F  time: 18110  ms: 96
+  freq: 0129 0109 0086 0304 vol: 12 14 15  mix: 0F  time: 18126  ms: 112
+  freq: 0116 0099 0079 0304 vol: 12 14 15  mix: 0F  time: 18142  ms: 128
+  freq: 0104 0090 0074 0284 vol: 12 14 15  mix: 0F  time: 18158  ms: 144
+  freq: 0095 0083 0069 0266 vol: 12 14 15  mix: 0F  time: 18174  ms: 160
+  freq: 0087 0077 0065 0251 vol: 12 14 15  mix: 0F  time: 18191  ms: 177
+  freq: 0081 0072 0061 0251 vol: 12 14 15  mix: 0F  time: 18206  ms: 192
+  freq: 0075 0067 0058 0237 vol: 12 14 15  mix: 0F  time: 18222  ms: 208
+  freq: 0070 0063 0055 0224 vol: 12 14 15  mix: 0F  time: 18238  ms: 224
+  freq: 0066 0060 0052 0213 vol: 13 14 15  mix: 0F  time: 18254  ms: 240
+  freq: 0062 0057 0050 0213 vol: 13 14 15  mix: 0F  time: 18270  ms: 256
+  freq: 0058 0054 0047 0203 vol: 13 14 15  mix: 0F  time: 18286  ms: 272
+  freq: 0055 0051 0045 0194 vol: 13 14 15  mix: 0F  time: 18302  ms: 288
+  freq: 0053 0049 0043 0185 vol: 13 14 15  mix: 0F  time: 18318  ms: 304
+  freq: 0050 0047 0042 0185 vol: 13 14 15  mix: 0F  time: 18334  ms: 320
+  freq: 0048 0045 0040 0177 vol: 13 14 15  mix: 0F  time: 18350  ms: 336
+  freq: 0046 0043 0039 0170 vol: 13 14 15  mix: 0F  time: 18366  ms: 352
+  freq: 0044 0041 0037 0164 vol: 14 14 15  mix: 0F  time: 18383  ms: 369
+  freq: 0042 0040 0036 0164 vol: 14 14 15  mix: 0F  time: 18398  ms: 384
+  freq: 0040 0038 0035 0158 vol: 14 14 15  mix: 0F  time: 18414  ms: 400
+  freq: 0039 0037 0034 0152 vol: 14 14 15  mix: 0F  time: 18430  ms: 416
+  freq: 0038 0036 0033 0147 vol: 14 14 15  mix: 0F  time: 18447  ms: 433
+  freq: 0036 0034 0032 0147 vol: 14 14 15  mix: 0F  time: 18462  ms: 448
+  freq: 0000 0000 0000 0000 vol: 00 00 00  mix: 00  time: 18478  ms: 464
+</pre>
+<br>
+Se ve como llega el comando 0x07, y luego llegan 30 datos, con el canal A,B,C y ruido, con hasta un total de 464 milisegundos de duración. Esta vez, el mezclador, al tener frecuencia de ruido, tenemos además de los 3 bits de los registros ABC, los 3 bits superiores que nos indican en que canal saldrá la frecuencia de ruido.<br><br>
+
+| MIX  | Bin    | NC | NB | NA |
+|------|--------|----|----|----|
+|      | 000xxx | 0  | 0  | 0  |
+|      | 001xxx | 0  | 0  | 1  |
+|      | 010xxx | 0  | 1  | 0  |
+|      | 011xxx | 0  | 1  | 1  |
+|      | 100xxx | 1  | 0  | 0  |
+|      | 101xxx | 1  | 0  | 1  |
+|      | 110xxx | 1  | 1  | 0  |
+|      | 111xxx | 1  | 1  | 1  |
+
+<br><br>
 
 
 Para las melodías, que podemos tener en SAMPLES WAV o crudos, serían:<br>
@@ -432,7 +484,7 @@ Y por último sólo queda mezclar el sample con el resto, que dependerá del res
 
 >auxMix+= (int)(gb_vgz_data[gb_idPlay][gb_cont_vgz])*250; <br>
 
-Esto sería para el caso de SDL. Si estamos con ESP32, apuntaría al buffer de FLASH o bien a un buffer intermedio de SRAM que mediante otro buffer se puera rellenando a intervalos.<br>
+Esto sería para el caso de SDL. Si estamos con ESP32, apuntaría al buffer de FLASH o bien a un buffer intermedio de SRAM que mediante otro buffer se fuera rellenando a intervalos.<br>
 
 
 
