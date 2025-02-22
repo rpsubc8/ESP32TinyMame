@@ -22,9 +22,9 @@ Es decir, se necesitan 2 CPU's Z80, una para el juego, y la otra para el sonido:
 <h1>YM2203</h1>
 El YM2203 es un chip OPN, que en la parte PSG es similar a un AY-3-8912 con 3 canales, mientras que en la parte OPN dispone de 3 canales FM con osciladores.<br>
 Los efectos, como disparos, bombas y explosiones, van a la parte PSG, es decir, a los 3 canales de una emulación básica AY-3-8912<br>
-Los efectos del jugador 1 van a uno de los 2 AY-3-8912, mientras que el jugador 2, al otro. Cuando ocurren explosiones, se usan ambos.<br>
+Los efectos del jugador 1, van a uno de los 2 AY-3-8912, mientras que el jugador 2, al otro. Cuando ocurren explosiones, se usan ambos.<br>
 Disponemos por tanto de (3+3)+(3+3)= 12 canales. El canal de ruido si se sigue la emulación extricta de un AY-3-8912, saldrá por 1 de los 3 canales, pero si disponemos de CPU host suficiente y queremos darle más calidad lo podemos añadir a la mezcla, de manera que nos daría 14 canales.<br>
-El YM2203 MAME lo gestiona como un AY-3-8912, siempre que la escritura a los registros sea inferior a 16, por medio de la función <b>AYWriteReg</b> en el <b>psg.cpp</b>. En cuanto sea un registro superior, se gestionaria la parte FM (osd_ym2203_write).
+El YM2203 MAME lo gestiona como un AY-3-8912, siempre que la escritura a los registros sea inferior a 16, por medio de la función <b>AYWriteReg</b> en el <b>psg.cpp</b>. En cuanto sea un registro superior, se gestionaría la parte FM (osd_ym2203_write).
 <br>
 La parte PSG de AY-3-8912, consta de:<br><br>
 
@@ -137,7 +137,7 @@ Este ejemplo es para tener la frecuencia del canal A, en concreto de 1 de los 2 
 > gb_max_cont_neg_ch[0]= gb_max_cont_pos_ch[0]; <br>
 <br>
 
-Para el caso del canal B y C, es similar.
+Para el caso del canal B y C, es similar.<br>
 
 Para la mezcla en los osciladores SDL,es tan sencillo como hacer una simple suma, teniendo en cuenta:<br><br>
 
@@ -333,7 +333,7 @@ El sistema es similar al uso de osciladores de SDL, es decir, se genera en tiemp
 
 El sistema es similar a SDL, usando un registro latch intermedio, de forma que concurrentemente cada milisegundo se va mirando estado de dicho latch, el cual se va actualizando cada vez que se escribe en un registro del AY-3-8912.<br>
 Si la rutina de emulación de CPU de un frame completo, es muy rápida, es decir, por debajo de 8 milisegundos, puede que no necesitamos usar un timer con el latch cada 1 milisegundo.<br>
-El uso de la rutina con timer de tiempo real para los osciladores, al usar el DAC sin I2S con DMA, consume un poco más de CPU, pero a cambio solucionamos el problema con los diferentes frameworks de Espressif (sin solución). No obstante, si en lugar de usar este sistema, usaramos una escalera de reistencias R2R con salida GPIO o bien una comunicación I2C con un chip (Atmega328) o DAC exterior, quedaría también solucionado.<br>
+El uso de la rutina con timer de tiempo real para los osciladores, al usar el DAC sin I2S con DMA, consume un poco más de CPU, pero a cambio solucionamos el problema con los diferentes frameworks de Espressif (sin solución) del uso del DAC interno. No obstante, si en lugar de usar este sistema, usaramos una escalera de resistencias R2R con salida GPIO o bien una comunicación I2C con un chip (Atmega328) o DAC exterior, quedaría también solucionado, e incluso sería mejor, dado que es más rápido que el DAC interno del ESP32.<br>
 
 
 <br><br>
