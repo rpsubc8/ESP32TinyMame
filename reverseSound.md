@@ -472,17 +472,32 @@ https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/bomba.wav?raw=true
 
 Para las melodías, que podemos tener en SAMPLES WAV o crudos, serían:<br>
 
-| CMD  | Tipo | Descripción              |
-|------|------|--------------------------|
-| 0x20 | VGM  | Melodía 03.Game Start    |
-| 0x23 | VGM  | Melodía 23.Screen Change |
-| 0x25 | VGM  | Melodía 01.Credit        |
-| 0x26 | VGM  | Melodía 22.Game Over     |
-| 0x2B | VGM  | Melodía Area 1           |
-| 0x31 | VGM  | Melodía 10.Underground   |
-| 0x36 | VGM  | Melodía 21.Continue      |
-| 0x37 | VGM  | Melodía 02.Start Demo    |
-
+| CMD  | Tipo | Descripción                  |
+|------|------|------------------------------|
+| 0x25 | VGM  | Melodía 01.Credit            |
+| 0x37 | VGM  | Melodía 02.Start Demo        |
+| 0x20 | VGM  | Melodía 03.Game Start        |
+| 0x2B | VGM  | Melodía 04.Area 1            |
+| 0x2C | VGM  | Melodía 05.Area 2            |
+| 0x2D | VGM  | Melodía 06.Area 3            |
+| 0x2E | VGM  | Melodía 07.Area 4            |
+| 0x2F | VGM  | Melodía 08.Area 5            |
+| 0x30 | VGM  | Melodía 09.Bonus Area        |
+| 0x31 | VGM  | Melodía 10.Underground       |
+| 0x32 | VGM  | Melodía 11.Sanctuary         |
+| 0x33 | VGM  | Melodía 12.Underground Boss  |
+| 0x34 | VGM  | Melodía 13.Area Boss         |
+| 0x35 | VGM  | Melodía 14.Sanctuary Boss    |
+| 0x21 | VGM  | Melodía 15.Area Clear 1      |
+|      |      | Melodía 16.Area Clear 2      |
+|      |      | Melodía 17.Ranking 1         |
+|      |      | Melodía 18.Ranking 2         |
+|      |      | Melodía 19.Ranking Display 1 |
+|      |      | Melodía 20.Ranking Display 2 |
+| 0x36 | VGM  | Melodía 21.Continue          |
+| 0x26 | VGM  | Melodía 22.Game Over         |
+| 0x23 | VGM  | Melodía 23.Screen Change     |
+|      |      | Melodía 24.Extend            |
 
 <br>
 Las melodías (VGM), a diferencia de los SFX, se van encolando, de manera, que hasta que no termina, no suena la siguiente. Esto es algo que se nota sobre todo al empezar partida en primer nivel desde 0, que van encolándose:<br><br>
@@ -546,7 +561,12 @@ En Total: 16:58 + 11:46<br>
 Se pueden extraer todas de:<br><br>
 <a href='https://vgmrips.net/packs/pack/legendary-wings-arcade'>https://vgmrips.net/packs/pack/legendary-wings-arcade</a><br><br>
 Así mismo, las melodías, como tienen calidad MIDI, se podrían resamplear algunas a 2000 Hz, y otras a 4000 Hz, sin perder calidad. Si no tenemos problemas de espacio, como es el caso de un ESP32, es decir, por ejemplo en un PC, se pueden dejar en 8000 Hz o más.<br>
-Muchas melodias, son secuenciales, por ejemplo, después del    22. Game Over 0:07   viene la    21. Continue 0:12, salvo que consigamos Ranking.
+Muchas melodias, son secuenciales, por ejemplo, después de una, viene la otra:<br>
+<ul>
+ <li>22. Game Over 0:07</li>
+ <li>21. Continue 0:12, salvo que consigamos Ranking.</li>
+</ul>
+
 
 
 
@@ -562,6 +582,7 @@ De lo que he podido depurar, el nivel de juego se puede detectar por 3 posicione
 <br>
 
 El nivel propiamente dicho está en 0xC06D, pero si no se envia el set a 1 de las posiciones 0xC06C y 0 de 0xC06E, no se hará ninguna acción.<br>
+La dirección 0xC06D, sólo puede llegar a 5 y una vez superado, pasa a 0.<br>
 Saber el nivel, es cómodo para poder saber que melodía debemos poner y para más situaciones.
 
 
