@@ -598,6 +598,26 @@ Saber el nivel, es cómodo para poder saber que melodía debemos poner y para m�
 
 
 <br><br>
+<h1>Patrones</h1>
+Un sistema no sólo alternativo,sino complementario para detección de VGM's, sería el uso no sólo de patrones visuales, sino de estados del emulador, ya que tenemos acceso al MAME directo.<br>
+Para el caso de pulsar la tecla 3, que equivale a introducir moneda, ya podemos asociarle el VGM <b>Melodía 01.Credit</b>.<br>
+Así mismo, una vez pulsemos la tecla 1, se sabe que se inicia la emulación, por lo que pasariamos a la secuencia:
+<ul>
+ <li>02.Start Demo</li>
+ <li>03.Game Start</li>
+ <li>04.Area 1</li>
+</ul>
+Así mismo, cuando morimos, la pantalla de GAME OVER, es:<br><br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/screengameover.gif'></center>
+Detectarla, es muy sencillo, dado que es casi todo negro, pero no haría falta analizar toda la imagen, sólo un par de pixels mínimo que lo diferencie del resto. Además, no hace falta analizarlo siempre, ni siquiera 50 o 60 veces por segundo, con muchísimo menos, ya sirve.<br><br>
+
+Después del GAMEOVER, siempre viene el CONTINUE, así que la forma de detectarlo es más fácil, ya que ya partimos del GAMEOVER.<br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/screencontinue.gif'></center>
+
+
+
+
+<br><br>
 <h1>Trucos</h1>
 La información está sacada de:<br><br>
 <center></center><a href='https://ryiron.wordpress.com/2019/10/14/legendary-wings-reversing-a-1980s-arcade-game/'>https://ryiron.wordpress.com/2019/10/14/legendary-wings-reversing-a-1980s-arcade-game</a></center><br><br>
