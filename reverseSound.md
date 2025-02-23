@@ -571,6 +571,14 @@ Muchas melodias, son secuenciales, por ejemplo, después de una, viene la otra:<
 
 
 
+<br><br>
+<h1>Compactar</h1>
+Las melodías en formato RAW o WAV, puede que ocupen demasiado,sobre todo para dispositivos de recursos reducidos como el ESP32. Sin embargo, mucha información sobra, por ejemplo, tenemos segundos de silencio, que al estar sampleados, ocupan demasiado.<br>
+Recordemos, que 1 segundo con un sampleo de 8000 Hz, equivale a 8000 bytes.<br>
+Un ejemplo, sería el VGM <b>22.Game Over</b>, que tiene un par de milisegundos de silencio al principio y 1 segundo al final.<br><br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/gameoversnd.gif'></center><br>
+Esos datos de silencio, se pueden quitar del almacenamiento, y dejar que se encarguen las partes de arriba de controlar, con sólo decirle que tiene 1 segundo de silencio al final.
+
 
 <br><br>
 <h1>Nivel</h1>
