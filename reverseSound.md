@@ -490,10 +490,10 @@ Para las melodías, que podemos tener en SAMPLES WAV o crudos, serían:<br>
 | 0x35 | VGM  | Melodía 14.Sanctuary Boss    |
 | 0x21 | VGM  | Melodía 15.Area Clear 1      |
 |      |      | Melodía 16.Area Clear 2      |
-|      |      | Melodía 17.Ranking 1         |
-|      |      | Melodía 18.Ranking 2         |
-|      |      | Melodía 19.Ranking Display 1 |
-|      |      | Melodía 20.Ranking Display 2 |
+| 0x27 | VGM  | Melodía 17.Ranking 1         |
+| 0x28 | VGM  | Melodía 18.Ranking 2         |
+| 0x29 | VGM  | Melodía 19.Ranking Display 1 |
+| 0x2A | VGM  | Melodía 20.Ranking Display 2 |
 | 0x36 | VGM  | Melodía 21.Continue          |
 | 0x26 | VGM  | Melodía 22.Game Over         |
 | 0x23 | VGM  | Melodía 23.Screen Change     |
