@@ -577,7 +577,57 @@ Las melodías en formato RAW o WAV, puede que ocupen demasiado,sobre todo para d
 Recordemos, que 1 segundo con un sampleo de 8000 Hz, equivale a 8000 bytes.<br>
 Un ejemplo, sería el VGM <b>22.Game Over</b>, que tiene un par de milisegundos de silencio al principio y 1 segundo al final.<br><br>
 <center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/gameoversnd.gif'></center><br>
-Esos datos de silencio, se pueden quitar del almacenamiento, y dejar que se encarguen las partes de arriba de controlar, con sólo decirle que tiene 1 segundo de silencio al final.
+Esos datos de silencio, se pueden quitar del almacenamiento, y dejar que se encarguen las partes de arriba de controlar, con sólo decirle que tiene 1 segundo de silencio al final.<br><br>
+
+Los datos del archivo de audio, aunque se han dejado con 8 bits, se puede apreciar, que tanto sus valores mínimos y máximos no superan ni el -59, ni el 61:<br><br>
+
+| VGM                  | Min | Max |
+|----------------------|-----|-----|
+| 01 Credit            | -38 | 25  |
+| 02 StartDemo         | -42 | 46  |
+| 03 GameStart         | -44 | 46  |
+| 04 Area1             | -44 | 46  |
+| 05 Area2             | -55 | 46  |
+| 06 Area3             | -57 | 49  |
+| 07 Area4             | -57 | 55  |
+| 08 Area5             | -57 | 58  |
+| 09 BonusArea         | -57 | 58  |
+| 10 Underground       | -57 | 58  |
+| 11 Sanctuary         | -57 | 58  |
+| 12 Underground Boss  | -57 | 58  |
+| 13 Area Boss         | -57 | 58  |
+| 14 Sanctuary Boss    | -57 | 58  |
+| 15 Area Clear        | -57 | 58  |
+| 16 Area Clear        | -57 | 58  |
+| 17 Ranking 1         | -57 | 58  |
+| 18 Ranking 2         | -59 | 59  |
+| 19 Ranking Display 1 | -59 | 59  |
+| 20 Ranking Display 2 | -59 | 59  |
+| 21 Continue          | -59 | 59  |
+| 22 Game Over         | -59 | 59  |
+| 23 Screen Change     | -59 | 61  |
+| 24 Extend            | -59 | 61  |
+
+<br>
+Por tanto, con una codificación de 7 bits (-63, 63) nos serviría, aunque claro, sólo ahorraríamos 1 bit. Si hacemos una división a la mitad, es decir, un DIV 2, veríamos que con 6 bits (-31, 31) conseguimos mismos resultados, es sí, debemos hacer una normalización, de manera que si el valor antes de hacer la división no era 0, y luego si, mejor hacer una división menos agresiva:
+
+<pre>
+ divAgresiva= 8;
+ 
+ aux= ptr[j];                
+ auxAntes= aux;
+
+ aux= aux/divAgresiva;
+ if ((aux==0)&&(auxAntes!=0)) 
+ {
+  aux= (auxAntes/(divAgresiva/2)); 
+ }
+</pre>
+
+Con 6 bits, ahorramos un 25% de espacio, muy útil para el ESP32. Pero podemos, seguir más agresivamente y aplicando algoritmos de compresión de bajos recursos con el muestreo, valorando la pérdida de calidad.<br>
+Todos los algoritmos que apliquemos de reducción, a la hora de reproducir, debemos de hacer el proceso inverso.
+
+ 
 
 
 <br><br>
