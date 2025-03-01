@@ -584,7 +584,9 @@ También existe repitición de bloques, al ser partituras, en concreto, lo podem
 Se dispone de 28 segundos, que se repite otros 28 segundos, para terminar con una última repetición del bloque de sólo 7 segundos con un efecto de fade out.<br>
 Por tanto, pasamos de una duración de 00:01:04 de datos a tan sólo 00:00:28, que se repite 3 veces, es decir, de 512000 bytes (500 KB) a 224000 bytes (218 KB).<br>
 <br>
-
+Podemos seguir reduciendo más, dado que dentro del bloque 1, tenemos una repetición de 7,5 segundos:<br><br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/compress10Underground02.gif'></center>
+<br>
 Los datos del archivo de audio, aunque se han dejado con 8 bits, se puede apreciar, que tanto sus valores mínimos y máximos no superan ni el -59, ni el 61:<br><br>
 
 | VGM                  | Min | Max |
