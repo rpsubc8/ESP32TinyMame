@@ -579,6 +579,12 @@ Un ejemplo, sería el VGM <b>22.Game Over</b>, que tiene un par de milisegundos 
 <center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/gameoversnd.gif'></center><br>
 Esos datos de silencio, se pueden quitar del almacenamiento, y dejar que se encarguen las partes de arriba de controlar, con sólo decirle que tiene 1 segundo de silencio al final.<br><br>
 
+También existe repitición de bloques, al ser partituras, en concreto, lo podemos ver en el VGM 10. Underground:<br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/compress10Underground.gif'></center>
+Se dispone de 28 segundos, que se repite otros 28 segundos, para terminar con una última repetición del bloque de sólo 7 segundos con un efecto de fade out.<br>
+Por tanto, pasamos de una duración de 00:01:04 de datos a tan sólo 00:00:28, que se repite 3 veces, es decir, de 512000 bytes (500 KB) a 224000 bytes (218 KB).<br>
+<br>
+
 Los datos del archivo de audio, aunque se han dejado con 8 bits, se puede apreciar, que tanto sus valores mínimos y máximos no superan ni el -59, ni el 61:<br><br>
 
 | VGM                  | Min | Max |
