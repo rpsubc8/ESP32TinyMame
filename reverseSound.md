@@ -612,6 +612,7 @@ Los datos del archivo de audio, aunque se han dejado con 8 bits, se puede apreci
 Por tanto, con una codificación de 7 bits (-63, 63) nos serviría, aunque claro, sólo ahorraríamos 1 bit. Si hacemos una división a la mitad, es decir, un DIV 2, veríamos que con 6 bits (-31, 31) conseguimos mismos resultados, pero, debemos hacer una normalización, de manera que si el valor antes de hacer la división no era 0, y luego si, mejor hacer una división menos agresiva:<br><br>
 
 <pre>
+ //Codificacion agresiva simple 4 bits (-7,7)
  divAgresiva= 8;
  
  aux= ptr[j];                
