@@ -32,8 +32,8 @@ Por tanto, se necesita:
 
 Para evitar problemas, cosas a destacar:
 <pre>
-El nasm has que usar el nasm098.zip de msdos.
-Rrenombrar a nasmw.exe para que funciona en dosbox para soporte CPU 68000
+El nasm hay que usar el nasm098.zip de msdos.
+Renombrar a nasmw.exe para que funciona en dosbox para soporte CPU 68000
 
 unzip djdev203.zip -d c:\djgpp\
 unzip bnu2951b.zip -d c:\djgpp\
