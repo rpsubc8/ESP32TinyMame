@@ -5,6 +5,12 @@
 </ul>
 
 <br><br>
+<h1>Compile</h1>
+<ul>
+ <li><a href='readmeCompile.md'>Compile MAME 0.29 (msdos)</li>
+</ul>
+
+<br><br>
 <h1>Reverse engineer</h1>
 <ul>
  <li><a href='reverseSound.md'>Legendary Wings (Sound)</a></li>
