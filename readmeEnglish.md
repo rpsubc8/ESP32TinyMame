@@ -23,7 +23,7 @@
 | ----------- | ---------------------- |
 | Move        | Left, Right, Up, Down  | 
 | Fire        | Ctrl, Alt              |
-| Coins       | 12,3,4                 |
+| Coins       | 1,2,3,4                 |
 | Skip FPS    | F8                     |
 | Reset Emu   | F3                     |
 | Sound       | F9 (not available)     |
