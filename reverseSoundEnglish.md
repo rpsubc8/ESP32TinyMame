@@ -122,7 +122,7 @@ If, for example, we want to:<br><br>
 >  44 / 2 = 22 positive and 22 negative samples. <br>
 <br>
 The positive and negative switching is handled internally by the <b>gb_flipflop_ch</b>. So we only have to control the loop with the number of channels, which in this case is 6, both the flipflop switching and the mixing.<br>
-The <b>gb>gbVolMixer_now</b> controls the mixer for each channel, so if it is set to 0, that channel is muted, i.e. no mixing, no processing.<br>
+The <b>gbVolMixer_now</b> controls the mixer for each channel, so if it is set to 0, that channel is muted, i.e. no mixing, no processing.<br>
 The <b>gbVol_channel_now</b> controls the volume of each channel, so it is somewhat similar to the gbVolMixer_now.<br><br>
 En esta función de relleno de buffer no se calcula cuantas muestras son positivas ni negativas dada una fecuencia, puesto que ya se le pasa ese cálculo. To know this, it has to be previously calculated, in the <b>_AYUpdateChip</b> from <b>psg.cpp</b>:<br><br>
 <pre>
