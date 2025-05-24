@@ -113,3 +113,41 @@ If you want a 6-channel mixer, i.e. 2 AY-3-8912 chips, something similar works:<
   } 
  }
 </pre>
+
+In <b>Legendary Wings</b>, no use is made of the sound duty cycle, as could be the case with the NES APU, i.e. the AY-3-8912 sound wave, besides being square, has the same duration of the positive part as the negative part, which makes the calculations easier.<br>
+If, for example, we want to:<br><br>
+
+> Frequency 1000 Hz <br>
+>  44100 Hz / 1000 Hz = 44 samples <br>
+>  44 / 2 = 22 positive and 22 negative samples. <br>
+<br>
+The positive and negative switching is handled internally by the <b>gb_flipflop_ch</b>. So we only have to control the loop with the number of channels, which in this case is 6, both the flipflop switching and the mixing.<br>
+The <b>gb>gbVolMixer_now</b> controls the mixer for each channel, so if it is set to 0, that channel is muted, i.e. no mixing, no processing.<br>
+The <b>gbVol_channel_now</b> controls the volume of each channel, so it is somewhat similar to the gbVolMixer_now.<br><br>
+En esta función de relleno de buffer no se calcula cuantas muestras son positivas ni negativas dada una fecuencia, puesto que ya se le pasa ese cálculo. To know this, it has to be previously calculated, in the <b>_AYUpdateChip</b> from <b>psg.cpp</b>:<br><br>
+<pre>
+ unsigned int a= (PSG->Regs[AY_AFINE]+((unsigned int)(PSG->Regs[AY_ACOARSE]&0xF)<<8));
+ //_AYUpdateChip clk:1500000000 rate:43920
+ a = a ? AYClockFreq / AYSoundRate * 4 / a : 0;
+ a=a>>2; //Para que suene más grave.
+</pre><br>
+This example is to have the frequency of channel A, specifically 1 of the 2 AY-3-8912. But we need to convert that frequency into the data for our oscillator:<br><br>
+
+> gb_max_cont_pos_ch[0]= (a!=0)? SAMPLE_RATE/a/2 : 0;  //44100/a/2 <br>
+> gb_max_cont_neg_ch[0]= gb_max_cont_pos_ch[0]; <br>
+<br>
+
+For channel B and C, it is similar.<br>
+
+For mixing in SDL oscillators, it is as simple as doing a simple addition, taking into account:<br><br>
+
+> flipflop 1 (positive part wave) - Maximum value. <br>
+> flipflop 0 (negative part wave) - Minimum value. <br>
+<br>
+
+The mixer of the AY-3-8912, is the registry <b>AY_ENABLE</b>, and controls the 3 channels (0 active, 1 mute) in negated logic:<br>
+<pre>
+ A - AY_ENABLE & 0x01 - gbVolMixer_now[0]= ((~AY_ENABLE) & 0x01)
+ B - AY_ENABLE & 0x02 - gbVolMixer_now[1]= ((~AY_ENABLE) & 0x02)
+ C - AY_ENABLE & 0x04 - gbVolMixer_now[2]= ((~AY_ENABLE) & 0x04)
+</pre>
