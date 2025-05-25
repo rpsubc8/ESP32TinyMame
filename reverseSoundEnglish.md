@@ -28,7 +28,7 @@ The YM2203 MAME handles it as an AY-3-8912, as long as the write to registers is
 <br>
 The PSG part of AY-3-8912, consisting of:<br><br>
 
- | Registro | Funcion                        | Nombre      | Rango        |
+ | Registro | Function                       | Name        | Range        |
  |----------|--------------------------------|-------------|--------------|
  | 0        | Channel A fine tone period     | AY_AFINE    | 8-bit(0-255) |
  | 1        | Channel A coarse tone period   | AY_ACOARSE  | 4-bit(0-15)  |
@@ -360,7 +360,7 @@ All this can be managed and traced from MAME code in <b>genericsndhrdw.cpp</b>, 
 Always 2 commands are sent, which is the VGM identifier (SAMPLE), followed by another command with the value 0xFF.<br>
 Some of the commands for SFX effects, would be:<br>
 
-| CMD  | Type | Descripción                    |
+| CMD  | Type | Description                    |
 |------|------|--------------------------------|
 | 0x01 | SFX  | Dying by enemy explosion       |
 | 0x04 | SFX  | Fire shot                      |
@@ -474,7 +474,7 @@ https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/bomba.wav?raw=true
 
 Para las melodías, que podemos tener en SAMPLES WAV o crudos, serían:<br>
 
-| CMD  | Tipo | Descripción                  |
+| CMD  | Type | Description                  |
 |------|------|------------------------------|
 | 0x25 | VGM  | Melody 01.Credit             |
 | 0x37 | VGM  | Melody 02.Start Demo         |
@@ -531,7 +531,7 @@ This would be in the case of SDL. If we are with ESP32, it would point to the FL
 <h1>List</h1>
 VGM tunes are a kind of MIDI, especially in terms of the final audio output:<br><br>
 
-| ID | Nombre           | Duración    |
+| ID | Name              | Duration    |
 |----|-------------------|-------------|
 | 01 | Credit            | 0:02        |
 | 02 | Start Demo        | 0:06        |
@@ -666,4 +666,119 @@ Likewise, once we press the 1 key, we know that the emulation starts, so we move
  <li>03.Game Start</li>
  <li>04.Area 1</li>
 </ul>
+Likewise, when we die, the GAME OVER screen, is:<br><br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/screengameover.gif'></center>
+Detecting it is very simple, given that it is almost all black, but it would not be necessary to analyse the whole image, just a couple of pixels that differentiate it from the rest. Moreover, it is not necessary to analyse it all the time, not even 50 or 60 times per second, with much less, it is enough.<br><br>
+
+After the GAMEOVER, there is always the CONTINUE, so the way to detect it is easier, since we already start from the GAMEOVER.<br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/screencontinue.gif'></center>
+If record 1 or 2 has been beaten, the melody of ranking 1 or 2 will be played, as well as the melody of Ranking Display 1 or 2 once saved.<br><br>
+
+The relationship of screens and tunes is mainly as follows, and serves to analyse the differentiating pixel pattern:<br>
+<table>
+ <tr>
+  <th>02. Start Demo</th>
+  <th>03. Game Start</th>
+  <th>04. Area 1</th>
+  <th>23. Screen Change</th>  
+ </tr>
+ <tr>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/01startdemo.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/02gamestart.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/03area1.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/05screenchange.gif'></td> 
+ </tr>
+ <tr>
+  <th>23. Screen Change</th>
+  <th>12. Underground Boss</th>
+  <th>13.	Area Boss</th>
+  <th>11.	Sanctuary</th>
+ </tr> 
+ <tr>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/06screenchange.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/07undergroundboss.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/08areaboss.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/09sanctuary.gif'></td>
+ </tr>
+ <tr>
+  <th>14. Sanctuary Boss</th>
+  <th>15.	Area Clear 1</th>
+  <th>05.	Area 2</th>
+  <th>05.	Area 2</th>
+ </tr> 
+ <tr>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/10sanctuaryboss.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/11areaclear1.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/12area2.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/13area2.gif'></td>
+ </tr>
+ <tr>
+  <th>13.	Area Boss</th>
+  <th>15.	Area Clear 1</th>
+  <th>06.	Area 3</th>
+  <th>06.	Area 3</th>
+ </tr> 
+ <tr>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/14areaboss.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/15areaclear1.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/16area3.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/17area3.gif'></td>
+ </tr>
+ <tr>
+  <th>13.	Area Boss</th>
+  <th>15.	Area Clear 1</th>
+  <th>06.	Area 3</th>
+  <th>07. Area 4</th>
+ </tr> 
+ <tr>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/18areaboss.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/19areaclear1.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/20area3.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/21area4.gif'></td>
+ </tr>
+ <tr>
+  <th>13.	Area Boss</th>
+  <th>15.	Area Clear 1</th>
+  <th>07. Area 4</th>
+  <th>08.	Area 5</th>
+ </tr> 
+ <tr>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/22areaboss.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/23areaclear1.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/24area4.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/25area5.gif'></td>
+ </tr>
+ <tr>
+  <th>13.	Area Boss</th>
+  <th>15.	Area Clear 1</th>
+  <th>09. Bonus Area</th>
+  <th>18. Ranking 2</th>
+ </tr> 
+ <tr>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/26areaboss.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/27areaclear1.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/28bonusarea.gif'></td>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/200ranking2.gif'></td>
+ </tr>
+ <tr>
+  <th>20. Ranking Display 2</th>
+ </tr>
+ <tr>
+  <td><img src='https://raw.githubusercontent.com/rpsubc8/ESP32TinyMame/main/preview/201rankingdisplay2.gif'></td>
+ </tr> 
+</table>
+
+
+
+<br><br>
+<h1>Cheats</h1>
+The information is taken from:<br><br>
+<center></center><a href='https://ryiron.wordpress.com/2019/10/14/legendary-wings-reversing-a-1980s-arcade-game/'>https://ryiron.wordpress.com/2019/10/14/legendary-wings-reversing-a-1980s-arcade-game</a></center><br><br>
+
+| Memory  | Value | Action      |
+|---------|-------|-------------|
+| 0xC11B  | 1     | Invincible  |
+| 0xC118  | 0x05  | Enhancer    |
+
+Writing to this memory location from the higher layers of the emulator, even every second, would be enough.<br>
 
