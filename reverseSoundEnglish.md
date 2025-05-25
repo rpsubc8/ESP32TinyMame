@@ -151,3 +151,186 @@ The mixer of the AY-3-8912, is the registry <b>AY_ENABLE</b>, and controls the 3
  B - AY_ENABLE & 0x02 - gbVolMixer_now[1]= ((~AY_ENABLE) & 0x02)
  C - AY_ENABLE & 0x04 - gbVolMixer_now[2]= ((~AY_ENABLE) & 0x04)
 </pre>
+
+As we are working with 16 signed bits, the maximum is positive, while the minimum is negative. Since we are working with low values, no matter how much we add, we are not going to exceed the value of -32768 or 32767, so we do not need to clip.<br><br>
+
+In the case of noise, it comes from register 6 of AY-3-8912, i.e. its noise channel (AY_NOISEPER):<br>
+<pre>
+ unsigned int noise= PSG->Regs[AY_NOISEPER];
+ noise= noise ? AYClockFreq / AYSoundRate * 4 / noise : 0;
+ //noise= noise ? 1500000 / (16*noise) : 0;
+ noise=noise>>5;
+</pre><br>
+For the oscillator routine, although the <b>rand</b> function can be used, it is more optimised to make use of tricks.<br>
+We know the frequency, but we must apply random values for the positive part, and the same for the negative part, respecting the crossover by 0, as well as the sampling frequency:<br><br>
+<pre>
+ unsigned char gb_aRand[16]={5,1,9,1,4,1,2,1,16,1,7,1,13,1,6,1}; //0 a 15
+ unsigned char gb_contRand=0;
+ static unsigned int g_seed=0;
+ 
+ inline unsigned int fast_rand()
+ {
+  g_seed = ((214013 * g_seed) + 2531011);
+  return (g_seed>>16)&0x7FFF;
+ }
+
+ 
+ ...
+
+ 
+ //En la rutina de mezcla de canales
+ 
+  int vol= (int)(gbVol_canal_now[ch]) * (250/8) * ((gb_aRand[gb_contRand])+1); //De 1 a 14
+  if ((i&0x07)==0)      
+  {//44100 DIV 8000 = 5 lo dejo en cada 6 el cambio de aleatorio
+   gb_contRand++;
+   if (gb_contRand>15)
+   {
+    gb_contRand= gb_contRand + fast_rand() & 0x0F;
+    gb_contRand= (gb_contRand & 0x0F);
+   } 
+  }
+
+  auxMix+= (gb_flipflop_ch[ch]==1)? vol:-vol;
+ 
+</pre>
+
+
+<br><br>
+<h1>ESP32 Sound</h1>
+In the ESP32 we will make use of the DAC (GPIO 25), solving the I2S problems.<br>
+The output of the DAC is always positive (0 to 255) and although with 32000 Hz for the mixer, we have enough, we will deal with 44100 Hz.<br>
+The system is similar to the use of SDL oscillators, i.e. it is generated in real time (0 lag), changing only frequencies, but in addition, we do not make use of any buffer:<br><br>
+
+<pre>
+  hw_timer_t *gb_timerSound = NULL;
+  volatile unsigned char gb_spk_data= 0x80;
+  volatile unsigned char gb_spk_data_before= 0x80;
+
+  hw_timer_t *gb_timerPlayPoll = NULL;
+
+  void IRAM_ATTR onTimerSoundDAC(void); 
+  void IRAM_ATTR onTimerPlayPoll(void);
+ 
+ void setup()
+ {
+  dac_output_enable(DAC_CHANNEL_1);
+  CLEAR_PERI_REG_MASK(SENS_SAR_DAC_CTRL2_REG, SENS_DAC_CW_EN1_M);
+  SET_PERI_REG_BITS(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_DAC, 0x7f, RTC_IO_PDAC1_DAC_S);
+
+  gb_timerSound= timerBegin(0, 80, true); 
+  timerAttachInterrupt(gb_timerSound, &onTimerSoundDAC, true);
+
+  gb_timerPlayPoll = timerBegin(1,80,true);
+  timerAttachInterrupt(gb_timerPlayPoll, &onTimerPlayPoll, true);
+
+  //timerAlarmWrite(gb_timerSound, 125, true); //1000000 1 segundo  125 es 8000 hz
+  //timerAlarmWrite(gb_timerSound, 90, true); //1000000 1 segundo  125 es 11025 hz
+  //timerAlarmWrite(gb_timerSound, 62, true); //1000000 1 segundo  62 es 16000 hz
+  //timerAlarmWrite(gb_timerSound, 45, true); //1000000 1 segundo  45 es 22050 Hz
+  timerAlarmWrite(gb_timerSound, 22, true); //1000000 1 segundo  22 es 44100 Hz
+
+  timerAlarmWrite(gb_timerPlayPoll, 1000, true); //1000000 1 segundo  1000 es 1000 Hz 1 ms
+   
+  timerAlarmEnable(gb_timerSound);
+  timerAlarmEnable(gb_timerPlayPoll);  
+ }
+
+ 
+
+ void IRAM_ATTR onTimerPlayPoll()
+ {
+  Sonido_poll_play();
+ }
+
+ void Sonido_poll_play()
+ {
+  //Canal A
+  gbVol_canal_now[0]= gb_latch_vol_pulse[0];  
+  gb_max_cont_pos_ch[0]= gb_latch_pos_max_pulse[0];
+  gb_max_cont_neg_ch[0]= gb_latch_neg_max_pulse[0];
+
+  //Canal B
+  gbVol_canal_now[1]= gb_latch_vol_pulse[1];  
+  gb_max_cont_pos_ch[1]= gb_latch_pos_max_pulse[1];
+  gb_max_cont_neg_ch[1]= gb_latch_neg_max_pulse[1];
+
+  ...
+
+  for (unsigned char i=0;i<6;i++)
+  {
+   gbVolMixer_now[i]= gb_latch_vol_mix[i];
+  }
+ }
+ 
+ void IRAM_ATTR onTimerSoundDAC()
+ {  
+  int iSum;
+  int vol;
+  unsigned int auxMax;
+
+  if (gb_spk_data != gb_spk_data_before)
+  {
+   SET_PERI_REG_BITS(RTC_IO_PAD_DAC1_REG, RTC_IO_PDAC1_DAC, gb_spk_data, RTC_IO_PDAC1_DAC_S);   //dac_output
+   gb_spk_data_before= gb_spk_data;
+  }
+
+  iSum= 0;
+
+  //Canal A
+  gb_cur_cont_ch[0]++;
+  auxMax= (gb_flipflop_ch[0]==0) ? (gb_max_cont_pos_ch[0]): (gb_max_cont_neg_ch[0]);
+  if (gb_cur_cont_ch[0] >= auxMax)
+  {                          
+   gb_cur_cont_ch[0]=0;
+        
+   gb_flipflop_ch[0]++;
+   gb_flipflop_ch[0]= (gb_flipflop_ch[0] & 0x01);
+  }
+
+  //Canal B
+  gb_cur_cont_ch[1]++;
+  auxMax= (gb_flipflop_ch[1]==0) ? (gb_max_cont_pos_ch[1]): (gb_max_cont_neg_ch[1]);
+  if (gb_cur_cont_ch[1] >= auxMax)
+  {                          
+   gb_cur_cont_ch[1]=0;
+        
+   gb_flipflop_ch[1]++;
+   gb_flipflop_ch[1]= (gb_flipflop_ch[1] & 0x01);
+  }
+  
+  ...
+
+
+  //MIXER
+  //Canal A
+  if ((gbVolMixer_now[0]!=0) && (gbVol_canal_now[0]!=0))
+  {
+   vol= (int)(gbVol_canal_now[0])<<1;
+   iSum+= (gb_flipflop_ch[0]==1)? vol:-vol;
+  }
+
+  //Canal B
+  if ((gbVolMixer_now[1]!=0) && (gbVol_canal_now[1]!=0))
+  {
+   vol= (int)(gbVol_canal_now[1])<<1;
+   iSum+= (gb_flipflop_ch[1]==1)? vol:-vol;
+  }    
+  
+  ...
+
+  //Clipping
+  if (iSum>127) {iSum=127;}
+  else
+  {
+   if(iSum<-127) {iSum=-127;}
+  }
+  
+  gb_spk_data= (iSum+0x80);
+    
+ }
+</pre>
+
+The system is similar to SDL, using an intermediate latch register, so that concurrently every millisecond the status of this latch is checked, which is updated every time an AY-3-8912 register is written to.<br>
+If the CPU emulation routine of a full frame is very fast, i.e. below 8 milliseconds, we may not need to use a timer with the latch every 1 millisecond.<br>
+The use of the routine with real time timer for the oscillators, when using the DAC without I2S with DMA, consumes a little more CPU, but in exchange we solve the problem with the different Espressif frameworks (without solution) of using the internal DAC. However, if instead of using this system, we use a R2R resistor ladder with GPIO output or I2C communication with a chip (Atmega328) or external DAC, it would also be solved, and it would even be better, since it is faster than the internal DAC of the ESP32.<br>
