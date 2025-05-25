@@ -368,3 +368,159 @@ Some of the commands for SFX effects, would be:<br>
 | 0x0A | SFX  | Enemy fire explosion           |
 
 <br>
+
+SFX effects, in the end, although we could have them sampled, are translated into port write calls on the AY-3-8912 PSGs.<br>
+If we debug and leave trace, specifically in <b>_AYUpdateChip</b> of <b>psg.cpp</b>, we can either leave all writes to AY-3-8912 registers, or better, just with the calculations of frequency (A,B,C and noise), volume (A,B,C) and mix channels:<br>
+
+<pre>
+ soundw off:0x00 d:0x04 pend:0x00 QUEUE:0x0A (SAMPLE Fire)
+ soundw off:0x00 d:0xFF pend:0x00 QUEUE:0x0A
+         A    B    C   Noise       A  B  C
+  freq: 0411 0371 0853 0000  vol: 14 14 14  mix: 07 time: 12366  ms: 0
+  freq: 0344 0355 0711 0000  vol: 14 14 14  mix: 07 time: 12382  ms: 16
+  freq: 0296 0341 0609 0000  vol: 14 14 14  mix: 07 time: 12398  ms: 32
+  freq: 0260 0328 0533 0000  vol: 14 14 14  mix: 07 time: 12414  ms: 48
+  freq: 0232 0319 0481 0000  vol: 14 14 14  mix: 07 time: 12430  ms: 64
+  freq: 0242 0322 0494 0000  vol: 14 13 13  mix: 07 time: 12446  ms: 80
+  freq: 0282 0331 0559 0000  vol: 14 13 13  mix: 07 time: 12462  ms: 96
+  freq: 0338 0344 0644 0000  vol: 14 13 13  mix: 07 time: 12478  ms: 112
+  freq: 0294 0352 0578 0000  vol: 13 12 13  mix: 07 time: 12495  ms: 129
+  freq: 0279 0359 0559 0000  vol: 13 12 13  mix: 07 time: 12510  ms: 144
+  freq: 0313 0371 0644 0000  vol: 13 12 13  mix: 07 time: 12526  ms: 160
+  freq: 0264 0363 0726 0000  vol: 13 12 11  mix: 07 time: 12542  ms: 176
+  freq: 0238 0355 8538 0000  vol: 12 12 10  mix: 07 time: 12558  ms: 192
+  freq: 0191 0338 0975 0000  vol: 12 12 10  mix: 07 time: 12574  ms: 208
+  freq: 0000 0000 0000 0000  vol: 00 00 00  mix: 00 time: 12590  ms: 224
+</pre>
+<br>
+The advantage of intercepting both SFX's and VGM's is that we don't need to have <b>play_sound</b> active, and therefore neither emulate the Z80 sound, nor any of the sound chips.<br>
+I have simplified everything to show 1 chip of the AY-3-8912, since in this case there is only one player firing. You can see how the command 0x04 arrives, followed by 0xFF, i.e. the sound of the firing (SAMPLE Fire).<br>
+The time is the actual millisecond meter, while ms is the milliseconds from the start of the sound, so you can see that roughly every change is between 16 or 17 milliseconds, with a total duration of 224 milliseconds.<br>
+The volume of each channel goes from 0 to 15, and the mix is in hexadecimal, in normal logic, so if we have:<br><br>
+
+| MIX  | Bin | C B A |
+|------|-----|-------|
+| 0x00 | 000 | 0 0 0 |
+| 0x01 | 001 | 0 0 1 |
+| 0x02 | 010 | 0 1 0 |
+| 0x03 | 011 | 0 1 1 |
+| 0x04 | 100 | 1 0 0 |
+| 0x05 | 101 | 1 0 1 |
+| 0x06 | 110 | 1 1 0 |
+| 0x07 | 111 | 1 1 1 |
+
+<br><br>
+So, if we send the frequencies, with the volumes, the mix channel, all following the millisecond interval that is set, against the oscillator in real time, we will generate the trigger sound. Another option is to replace it with a SAMPLE in RAW format of the WAV, but sending only 15 data to generate 224 milliseconds of SAMPLE sound, is quite tempting, to save memory.<br><br>
+
+
+https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/disparo.wav?raw=true
+
+<br><br>
+Another example is the case of the Bomb SFX (0x07):<br>
+
+<pre>
+ soundw off:0x00 d:0x07 pend:0x00 QUEUE:0x0A (SAMPLE Bomb) 
+ soundw off:0x00 d:0xFF pend:0x00 QUEUE:0x0A
+         A    B    C   Noise       A  B  C
+  freq: 0853 0379 0196 0533  vol: 11 14 15  mix: 0F  time: 18014  ms: 0
+  freq: 0474 0279 0165 0474  vol: 11 14 15  mix: 0F  time: 18030  ms: 16
+  freq: 0328 0221 0143 0426  vol: 11 14 15  mix: 0F  time: 18046  ms: 32
+  freq: 0251 0183 0126 0388  vol: 11 14 15  mix: 0F  time: 18063  ms: 49
+  freq: 0204 0157 0113 0388  vol: 11 14 15  mix: 0F  time: 18078  ms: 64
+  freq: 0171 0137 0102 0355  vol: 11 14 15  mix: 0F  time: 18094  ms: 80
+  freq: 0147 0121 0093 0328  vol: 11 14 15  mix: 0F  time: 18110  ms: 96
+  freq: 0129 0109 0086 0304  vol: 12 14 15  mix: 0F  time: 18126  ms: 112
+  freq: 0116 0099 0079 0304  vol: 12 14 15  mix: 0F  time: 18142  ms: 128
+  freq: 0104 0090 0074 0284  vol: 12 14 15  mix: 0F  time: 18158  ms: 144
+  freq: 0095 0083 0069 0266  vol: 12 14 15  mix: 0F  time: 18174  ms: 160
+  freq: 0087 0077 0065 0251  vol: 12 14 15  mix: 0F  time: 18191  ms: 177
+  freq: 0081 0072 0061 0251  vol: 12 14 15  mix: 0F  time: 18206  ms: 192
+  freq: 0075 0067 0058 0237  vol: 12 14 15  mix: 0F  time: 18222  ms: 208
+  freq: 0070 0063 0055 0224  vol: 12 14 15  mix: 0F  time: 18238  ms: 224
+  freq: 0066 0060 0052 0213  vol: 13 14 15  mix: 0F  time: 18254  ms: 240
+  freq: 0062 0057 0050 0213  vol: 13 14 15  mix: 0F  time: 18270  ms: 256
+  freq: 0058 0054 0047 0203  vol: 13 14 15  mix: 0F  time: 18286  ms: 272
+  freq: 0055 0051 0045 0194  vol: 13 14 15  mix: 0F  time: 18302  ms: 288
+  freq: 0053 0049 0043 0185  vol: 13 14 15  mix: 0F  time: 18318  ms: 304
+  freq: 0050 0047 0042 0185  vol: 13 14 15  mix: 0F  time: 18334  ms: 320
+  freq: 0048 0045 0040 0177  vol: 13 14 15  mix: 0F  time: 18350  ms: 336
+  freq: 0046 0043 0039 0170  vol: 13 14 15  mix: 0F  time: 18366  ms: 352
+  freq: 0044 0041 0037 0164  vol: 14 14 15  mix: 0F  time: 18383  ms: 369
+  freq: 0042 0040 0036 0164  vol: 14 14 15  mix: 0F  time: 18398  ms: 384
+  freq: 0040 0038 0035 0158  vol: 14 14 15  mix: 0F  time: 18414  ms: 400
+  freq: 0039 0037 0034 0152  vol: 14 14 15  mix: 0F  time: 18430  ms: 416
+  freq: 0038 0036 0033 0147  vol: 14 14 15  mix: 0F  time: 18447  ms: 433
+  freq: 0036 0034 0032 0147  vol: 14 14 15  mix: 0F  time: 18462  ms: 448
+  freq: 0000 0000 0000 0000  vol: 00 00 00  mix: 00  time: 18478  ms: 464
+</pre>
+<br>
+We can see how the 0x07 command arrives, and then 30 pieces of data arrive, with channel A, B, C and noise, with a total of 464 milliseconds of duration. This time, the mixer, having noise frequency, we have in addition to the 3 bits of the ABC registers, the 3 upper bits that tell us in which channel the noise frequency will be output.<br><br>
+
+| MIX  | Bin    | NC | NB | NA |
+|------|--------|----|----|----|
+|      | 000xxx | 0  | 0  | 0  |
+|      | 001xxx | 0  | 0  | 1  |
+|      | 010xxx | 0  | 1  | 0  |
+|      | 011xxx | 0  | 1  | 1  |
+|      | 100xxx | 1  | 0  | 0  |
+|      | 101xxx | 1  | 0  | 1  |
+|      | 110xxx | 1  | 1  | 0  |
+|      | 111xxx | 1  | 1  | 1  |
+
+<br>
+https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/bomba.wav?raw=true
+<br><br>
+
+
+Para las melodías, que podemos tener en SAMPLES WAV o crudos, serían:<br>
+
+| CMD  | Tipo | Descripción                  |
+|------|------|------------------------------|
+| 0x25 | VGM  | Melody 01.Credit             |
+| 0x37 | VGM  | Melody 02.Start Demo         |
+| 0x20 | VGM  | Melody 03.Game Start         |
+| 0x2B | VGM  | Melody 04.Area 1             |
+| 0x2C | VGM  | Melody 05.Area 2             |
+| 0x2D | VGM  | Melody 06.Area 3             |
+| 0x2E | VGM  | Melody 07.Area 4             |
+| 0x2F | VGM  | Melody 08.Area 5             |
+| 0x30 | VGM  | Melody 09.Bonus Area         |
+| 0x31 | VGM  | Melody 10.Underground        |
+| 0x32 | VGM  | Melody 11.Sanctuary          |
+| 0x33 | VGM  | Melody 12.Underground Boss   |
+| 0x34 | VGM  | Melody 13.Area Boss          |
+| 0x35 | VGM  | Melody 14.Sanctuary Boss     |
+| 0x21 | VGM  | Melody 15.Area Clear 1       |
+|      |      | Melody 16.Area Clear 2       |
+| 0x27 | VGM  | Melody 17.Ranking 1          |
+| 0x28 | VGM  | Melody 18.Ranking 2          |
+| 0x29 | VGM  | Melody 19.Ranking Display 1  |
+| 0x2A | VGM  | Melody 20.Ranking Display 2  |
+| 0x36 | VGM  | Melody 21.Continue           |
+| 0x26 | VGM  | Melody 22.Game Over          |
+| 0x23 | VGM  | Melody 23.Screen Change      |
+|      |      | Melody 24.Extend             |
+
+<br>
+The melodies (VGM), unlike the SFX, are glued, so that the next one doesn't play until the end of the game. This is something that is especially noticeable when starting a game on the first level from 0, which are glued:<br><br>
+
+<ul>
+ <li>1.- (SAMPLE Melodía 02.Start Demo)</li>
+ <li>2.- (SAMPLE Melody 03.Game Start)</li>
+ <li>3.- (SAMPLE Melody Area 1)</li>
+</ul>
+
+To convert a VGM into a SAMPLE, there are several ways, but the most comfortable way is to use the <b>vgmplay</b>.:<br><br>
+
+> vgmplay -c General.LogSound=1 -w 01 Credit.vgz <br>
+
+Once the WAV is generated, we can convert it with <b>goldwave</b> or <b>audacity</b> to 8-bit RAW format with sign. Before we have to resample it so that it occupies less, that as it was commented, each VGM, allows a range in some special cases of 2000 Hz, but in the majority, better of 8000 Hz upwards.<br>
+Using sign, it is very useful in the case of ESP32 to be able to add in the mixture without having to convert the signs.<br><br>
+
+And finally, the only thing left to do is to mix the sample with the rest, which will depend on the resampling, but it would be as simple as mixing it with the normal mixer.<br>
+
+>auxMix+= (int)(gb_vgz_data[gb_idPlay][gb_cont_vgz])*250; <br>
+
+This would be in the case of SDL. If we are with ESP32, it would point to the FLASH buffer or to an intermediate SRAM buffer that would be filled at intervals by means of another buffer.<br>
+
+
