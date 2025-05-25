@@ -334,3 +334,37 @@ The system is similar to the use of SDL oscillators, i.e. it is generated in rea
 The system is similar to SDL, using an intermediate latch register, so that concurrently every millisecond the status of this latch is checked, which is updated every time an AY-3-8912 register is written to.<br>
 If the CPU emulation routine of a full frame is very fast, i.e. below 8 milliseconds, we may not need to use a timer with the latch every 1 millisecond.<br>
 The use of the routine with real time timer for the oscillators, when using the DAC without I2S with DMA, consumes a little more CPU, but in exchange we solve the problem with the different Espressif frameworks (without solution) of using the internal DAC. However, if instead of using this system, we use a R2R resistor ladder with GPIO output or I2C communication with a chip (Atmega328) or external DAC, it would also be solved, and it would even be better, since it is faster than the internal DAC of the ESP32.<br>
+
+
+<br><br>
+<h1>Emulation</h1>
+In <b>msdos.cpp</b> you can find the variable <b>play_sound</b>, so if it is set to 0, the second Z80 CPU will stop processing, and therefore, the YM2203 will stop emulating both the FM part and the PSG part of the AY-3-8912, that is, it will stop emulating the sound at 100%.<br>
+If, on the other hand, <b>play_sound</b> is set to 1, the sound Z80 will be emulated, and therefore the PSG calls of the AY-3-8912 will be picked up. In this case, we can emulate the AY-3-8912 or not, since we will see the relationship between the SFX's and the VGM's.
+Not only can we skip the PSG AY-3-8912 emulation, but also the FM YM2203 part, and even the emulation of the second Z80 CPU, as we have access to the sound commands sent by the main Z80 CPU to the sound CPU, via memory location <b>0xF80C</b> of the first CPU's context, which can be seen in the <b>lwingsdriver.cpp</b> driver.<br><br>
+
+<pre>
+ static struct MemoryWriteAddress writemem[] = {
+ {
+   { 0xc000, 0xdeff, MWA_RAM },
+   ...
+   { 0xf80c, 0xf80c, sound_command_w },
+   ...
+ }
+</pre><br>
+
+All this can be managed and traced from MAME code in <b>genericsndhrdw.cpp</b>, where the <b>sound_command_w</b> function call is located:<br>
+
+>	 void sound_command_w (int offset,int data) <br>
+>	 { <br>
+
+Always 2 commands are sent, which is the VGM identifier (SAMPLE), followed by another command with the value 0xFF.<br>
+Some of the commands for SFX effects, would be:<br>
+
+| CMD  | Type | Descripción                    |
+|------|------|--------------------------------|
+| 0x01 | SFX  | Dying by enemy explosion       |
+| 0x04 | SFX  | Fire shot                      |
+| 0x07 | SFX  | Pump                           |
+| 0x0A | SFX  | Enemy fire explosion           |
+
+<br>
