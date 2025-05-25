@@ -524,3 +524,146 @@ And finally, the only thing left to do is to mix the sample with the rest, which
 This would be in the case of SDL. If we are with ESP32, it would point to the FLASH buffer or to an intermediate SRAM buffer that would be filled at intervals by means of another buffer.<br>
 
 
+
+
+
+<br><br>
+<h1>List</h1>
+VGM tunes are a kind of MIDI, especially in terms of the final audio output:<br><br>
+
+| ID | Nombre           | Duración    |
+|----|-------------------|-------------|
+| 01 | Credit            | 0:02        |
+| 02 | Start Demo        | 0:06        |
+| 03 | Game Start        | 0:08        |
+| 04 | Area 1            | 1:13 + 0:59 |
+| 05 | Area 2            | 1:05 + 0:59 |
+| 06 | Area 3            | 1:30 + 1:27 |
+| 07 | Area 4            | 2:02 + 1:44 |
+| 08 | Area 5            | 2:04 + 1:47 |
+| 09 | Bonus Area        | 1:12 + 1:10 |
+| 10 | Underground       | 0:28 + 0:28 |
+| 11 | Sanctuary         | 1:43 + 1:17 |
+| 12 | Underground Boss  | 0:47 + 0:47 |
+| 13 | Area Boss         | 0:25 + 0:09 |
+| 14 | Sanctuary Boss    | 0:41 + 0:41 |
+| 15 | Area Clear 1      | 0:06        |
+| 16 | Area Clear 2      | 0:16        |
+| 17 | Ranking 1         | 2:00        |
+| 18 | Ranking 2         | 0:44 + 0:23 |
+| 19 | Ranking Display 1 | 0:06        |
+| 20 | Ranking Display 2 | 0:06        |
+| 21 | Continue          | 0:12        |
+| 22 | Game Over         | 0:07        |
+| 23 | Screen Change     | 0:05        |
+| 24 | Extend            | 0:02        |
+
+<br>
+In Total: 16:58 + 11:46<br>
+They can all be extracted from:<br><br>
+<a href='https://vgmrips.net/packs/pack/legendary-wings-arcade'>https://vgmrips.net/packs/pack/legendary-wings-arcade</a><br><br>
+Also, the melodies, as they have MIDI quality, could be resampled at 2000 Hz, and others at 4000 Hz, without losing quality. If we don't have space problems, as is the case with an ESP32, i.e. for example on a PC, they can be left at 8000 Hz or more.<br>
+Many melodies are sequential, i.e. after one comes another:<br>
+<ul>
+ <li>22. Game Over 0:07</li>
+ <li>21. Continue 0:12, unless we get Ranking.</li>
+</ul>
+
+
+
+<br><br>
+<h1>Compact</h1>
+The tunes in RAW or WAV format may take up too much space, especially for low-resource devices like the ESP32. However, a lot of information is left over, for example, we have seconds of silence, which, being sampled, take up too much space.<br>
+Recall that 1 second at 8000 Hz sampling is equivalent to 8000 bytes.<br>
+An example would be VGM <b>22.Game Over</b>, which has a couple of milliseconds of silence at the beginning and 1 second at the end.<br><br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/gameoversnd.gif'></center><br>
+That silence data can be removed from storage, and let the upstream parts take care of controlling it, just by telling it that it has 1 second of silence at the end.<br><br>
+
+There is also repetition of blocks, being scores, in particular, we can see it in VGM 10. Underground:<br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/compress10Underground.gif'></center>
+There are 28 seconds, which is repeated for another 28 seconds, ending with a final repetition of the block of only 7 seconds with a fade out effect.
+So we go from 00:01:04 of data to just 00:00:28, which is repeated 3 times, i.e. from 512000 bytes (500 KB) to 224000 bytes (218 KB).<br>
+<br>
+We can continue to reduce further, given that within block 1, we have a 7.5 second repetition:<br><br>
+<center><img src='https://github.com/rpsubc8/ESP32TinyMame/blob/main/preview/compress10Underground02.gif'></center>
+<br>
+The data of the audio file, although it has been left with 8 bits, it can be seen that both its minimum and maximum values do not exceed neither -59 nor 61:<br><br>
+
+| VGM                  | Min | Max |
+|----------------------|-----|-----|
+| 01 Credit            | -38 | 25  |
+| 02 StartDemo         | -42 | 46  |
+| 03 GameStart         | -44 | 46  |
+| 04 Area1             | -44 | 46  |
+| 05 Area2             | -55 | 46  |
+| 06 Area3             | -57 | 49  |
+| 07 Area4             | -57 | 55  |
+| 08 Area5             | -57 | 58  |
+| 09 BonusArea         | -57 | 58  |
+| 10 Underground       | -57 | 58  |
+| 11 Sanctuary         | -57 | 58  |
+| 12 Underground Boss  | -57 | 58  |
+| 13 Area Boss         | -57 | 58  |
+| 14 Sanctuary Boss    | -57 | 58  |
+| 15 Area Clear        | -57 | 58  |
+| 16 Area Clear        | -57 | 58  |
+| 17 Ranking 1         | -57 | 58  |
+| 18 Ranking 2         | -59 | 59  |
+| 19 Ranking Display 1 | -59 | 59  |
+| 20 Ranking Display 2 | -59 | 59  |
+| 21 Continue          | -59 | 59  |
+| 22 Game Over         | -59 | 59  |
+| 23 Screen Change     | -59 | 61  |
+| 24 Extend            | -59 | 61  |
+
+<br>
+Therefore, a 7-bit encoding (-63, 63) would work, although of course, we would only save 1 bit. If we make a division by half, that is, a DIV 2, we would see that with 6 bits (-31, 31) we get the same results, but we must make a normalisation, so that if the value before making the division was not 0, and then it was, it is better to make a less aggressive division:<br><br>
+
+<pre>
+ //Codificacion agresiva simple 4 bits (-7,7)
+ divAgresiva= 8;
+ 
+ aux= ptr[j];                
+ auxAntes= aux;
+
+ aux= aux/divAgresiva;
+ if ((aux==0)&&(auxAntes!=0)) 
+ {
+  aux= (auxAntes/(divAgresiva/2)); 
+ }
+</pre>
+
+With 6 bits, we save 25% space, very useful for ESP32. But we can, however, go more aggressively and apply low-resource compression algorithms with sampling, valuing the loss of quality.<br>
+All the algorithms that we apply for reduction, at the time of reproduction, we must do the inverse process.
+
+ 
+
+
+<br><br>
+<h1>Level</h1>
+From what I have been able to debug, the level of play can be detected by 3 memory locations:<br><br>
+
+| ADDR   | Descripción                      |
+|--------|----------------------------------|
+| 0xC06C | Reset (1 advances the level)     |
+| 0xC06D | The level                        |
+| 0xC06E | End (0 continue, 1 die)          |
+<br>
+
+The level itself is at 0xC06D, but if the set is not sent to 1 of positions 0xC06C and 0 of 0xC06E, no action will be taken.<br>
+Address 0xC06D, can only go to 5 and once exceeded, it goes to 0.<br>
+Knowing the level is useful to know what melody to play and for more situations.
+
+
+
+<br><br>
+<h1>Patterns</h1>
+An alternative, but complementary system for VGM detection would be the use not only of visual patterns, but also of emulator states, since we have direct access to MAME.<br>
+In the case of pressing key 3, which is equivalent to entering currency, we can associate the VGM <b>Melody 01.Credit</b> to it.<br>
+Likewise, once we press the 1 key, we know that the emulation starts, so we move on to the sequence:
+<ul>
+ <li>02.Start Demo</li>
+ <li>03.Game Start</li>
+ <li>04.Area 1</li>
+</ul>
+
